@@ -6,6 +6,7 @@ import subprocess
 cv_enabled = False
 gphoto2cffi_enabled = False
 piggyphoto_enabled = False
+fake_enabled = False
 
 try:
     import cv2 as cv
@@ -67,6 +68,7 @@ class Camera_gPhoto:
     """Camera class providing functionality to take pictures using gPhoto 2"""
 
     def __init__(self, picture_size):
+        global fake_enabled
         self.picture_size = picture_size
         # Print the capabilities of the connected camera
         try:
@@ -79,8 +81,12 @@ class Camera_gPhoto:
                 print(self.call_gphoto("-a", "/dev/null"))
         except CameraException as e:
             print('Warning: Listing camera capabilities failed (' + e.message + ')')
+            print "Enabing Fake Camera Mode..."
+            fake_enabled = True
         except gpExcept as e:
             print('Warning: Listing camera capabilities failed (' + e.message + ')')
+            print "Enabing Fake Camera Mode..."
+            fake_enabled = True
 
     def call_gphoto(self, action, filename):
         # Try to run the command
@@ -112,7 +118,10 @@ class Camera_gPhoto:
             raise CameraException("No preview supported!")
 
     def take_picture(self, filename="/tmp/picture.jpg"):
-        if gphoto2cffi_enabled:
+        print fake_enabled
+        if fake_enabled:
+            filename = "dbg.jpg"
+        elif gphoto2cffi_enabled:
             self._save_picture(filename, self.cap.capture())
         elif piggyphoto_enabled:
             self.cap.capture_image(filename)
