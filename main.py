@@ -77,10 +77,10 @@ def main():
     pose_time = 3
 
     # Is Photo Available
-    photo_upload = False
+    photo_upload_en = True
    
     # Printer Option enable?
-    printer_enable = True
+    printer_en = True
 
     # pygame fps
     fps = 45
@@ -89,7 +89,7 @@ def main():
     pygame.init()
     gameDisplay = pygame.display.set_mode((disp_w,disp_h),pygame.FULLSCREEN)
     pygame.mouse.set_visible(False)
-    pygame.display.set_caption('photobooth')
+    pygame.display.set_caption('Photobooth')
     clock = pygame.time.Clock()
 
     pictures = PictureList(picture_basename)
@@ -112,9 +112,9 @@ def main():
     intro_ani = IntroAnimation( gameDisplay, disp_w, disp_h, pictures )
     capture   = Capture ( gameDisplay, disp_w, disp_h, camera, fps )
     process  = Process( gameDisplay, disp_w, disp_h, pictures, fps )
-    #printupload = PrintUpload( gameDisplay, disp_w, disp_h, printer, uploader,fps)
+    printupload = PrintUpload( gameDisplay, disp_w, disp_h,fps, printer)
 
-
+    final_photos = []
     state = "INTRO_S"
     while not state == "END":
       
@@ -134,7 +134,7 @@ def main():
             intro_ani.next()                                     
             pygame.display.update()
 
-        ### INTRO CAPTURE STATES ###
+        ### CAPTURE STATES ###
         if state == "CAPTURE_S":
             capture.start()
             pygame.display.update()
@@ -154,7 +154,7 @@ def main():
                 photo_set_thumbs = capture.cap_thumbs
                 state = "PROCESS_S"
         
-        ### INTRO PROCESS STATES ###
+        ### PROCESS STATES ###
         if state == "PROCESS_S":
             process.start( photo_set, photo_set_thumbs )
             pygame.display.update()
@@ -166,16 +166,34 @@ def main():
                     state = "END"
                 elif process.is_done():
                     if green_press( event):  
+                        final_photos = process.get_result()
                         process.reset()
                         state = "PRINTUP_S"
                     elif red_press( event ): #Retake
                         process.reset()
                         state = "CAPTURE_S"
-
             process.next()
             pygame.display.update()
+        
+        ### PRINTER UPLOAD STATES ###
+        if state == "PRINTUP_S":
 
+            #Update Photo Upload/ Printer Enable Switch State
+            # TODO
 
+            process.start( final_photos, photo_upload_en, printer_en )
+            pygame.display.update()
+            state = "PRINTUP"
+        
+        if state == "PRINTUP":
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    state = "END"
+                elif printupload.is_done():
+                    state = "INTRO_S"
+
+            printupload.next()
+            pygame.display.update()
        
         clock.tick(fps)
     
