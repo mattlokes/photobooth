@@ -201,32 +201,28 @@ class Capture:
 
         #CAPTURE SCHEDULE
         if   self.cap_cnt == 0 and len(self.ani_q) == 0:
-            print "scedule cap 0"
             self.prev_cnt_c = tuple(map(operator.add, self.prev_c, (-50,-100)))
             self.__ani_q_txt_push("3", (255,255,255), 200, self.prev_cnt_c, 1)
             self.__ani_q_txt_push("2", (255,255,255), 200, self.prev_cnt_c, 1)
             self.__ani_q_txt_push("1", (255,255,255), 200, self.prev_cnt_c, 0.5)
             self.__ani_q_cmd_push("CAPTURE")
         elif self.cap_cnt == 1 and len(self.ani_q) == 0:
-            print "scedule cap 1"
             self.__ani_q_txt_push("3", (255,255,255), 200, self.prev_cnt_c, 1)
             self.__ani_q_txt_push("2", (255,255,255), 200, self.prev_cnt_c, 1)
             self.__ani_q_txt_push("1", (255,255,255), 200, self.prev_cnt_c, 0.5)
             self.__ani_q_cmd_push("CAPTURE")
         elif self.cap_cnt == 2 and len(self.ani_q) == 0:
-            print "scedule cap 2"
             self.__ani_q_txt_push("3", (255,255,255), 200, self.prev_cnt_c, 1)
             self.__ani_q_txt_push("2", (255,255,255), 200, self.prev_cnt_c, 1)
             self.__ani_q_txt_push("1", (255,255,255), 200, self.prev_cnt_c, 0.5)
             self.__ani_q_cmd_push("CAPTURE")
         elif self.cap_cnt == 3 and len(self.ani_q) == 0:
-            print "scedule cap 3"
             self.__ani_q_txt_push("3", (255,255,255), 200, self.prev_cnt_c, 1)
             self.__ani_q_txt_push("2", (255,255,255), 200, self.prev_cnt_c, 1)
             self.__ani_q_txt_push("1", (255,255,255), 200, self.prev_cnt_c, 0.5)
             self.__ani_q_cmd_push("CAPTURE")
         elif self.cap_cnt == 4 and len(self.ani_q) == 0:
-            for _ in range( 3*self.fps ):
+            for _ in range( int(0.5*self.fps) ):
                 self.__ani_q_cmd_push("NOP")
             self.__ani_q_cmd_push("COMPLETE")
 

@@ -16,6 +16,7 @@ from events import Rpi_GPIO as GPIO
 from picturelist import *
 from introanimation import *
 from capture import *
+from process import *
 
 def sig_green_handler(signum, frame):
     print 'Green handler called with signal'
@@ -110,7 +111,7 @@ def main():
 
     intro_ani = IntroAnimation( gameDisplay, disp_w, disp_h, pictures )
     capture   = Capture ( gameDisplay, disp_w, disp_h, camera, fps )
-    #process  = Process( gameDisplay, disp_w, disp_h, pictures, fps )
+    process  = Process( gameDisplay, disp_w, disp_h, pictures, fps )
     #printupload = PrintUpload( gameDisplay, disp_w, disp_h, printer, uploader,fps)
 
 
@@ -155,7 +156,7 @@ def main():
         
         ### INTRO PROCESS STATES ###
         if state == "PROCESS_S":
-            #process.start( photo_set, photo_set_thumbs )
+            process.start( photo_set, photo_set_thumbs )
             pygame.display.update()
             state = "PROCESS"
         
@@ -163,11 +164,17 @@ def main():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     state = "END"
+                elif process.is_done():
+                    if green_press( event):  
+                        process.reset()
+                        state = "PRINTUP_S"
+                    elif red_press( event ): #Retake
+                        process.reset()
+                        state = "CAPTURE_S"
 
-            #process.next()
+            process.next()
             pygame.display.update()
 
-            #if process.is_done():
 
        
         clock.tick(fps)

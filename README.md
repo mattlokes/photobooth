@@ -23,6 +23,7 @@ The following is required for running this photobooth application. I used the ve
 * [gPhoto](http://gphoto.sourceforge.net/) (2.5.6 or later) or [OpenCV](http://opencv.org)
 * Optional: [RPi.GPIO](https://pypi.python.org/pypi/RPi.GPIO) (0.5.11)
 * Optional: [gphoto2-cffi](https://github.com/jbaiter/gphoto2-cffi) or [Piggyphoto](https://github.com/alexdu/piggyphoto)
+* Optional: Google Drive API - " pip install --upgrade google-api-python-client"
 
 RPi.GPIO is necessary to use external buttons as a trigger but it works just fine without. Triggering is then only possible using 'g' & 'r' key (Context Related).
 
