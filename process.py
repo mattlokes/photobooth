@@ -87,7 +87,8 @@ class Process:
 
     def __ani_q_img_push(self, obj, xy, secs, fadeIn=False, overlay=False):
         alpha = 255 * (not fadeIn)
-        for _ in range( int(math.ceil(secs*self.fps)) ):
+        num = int(math.ceil(secs*self.fps)) if fadeIn else 1
+        for _ in range( num ):
             alpha += ( 255.0/(secs*self.fps) ) * fadeIn
             self.ani_q.append( {'type' : 'IMG',
                                 'obj' : obj, 
@@ -105,21 +106,11 @@ class Process:
                                 'scale': 1,
                                 'overlay': True} )
     
-    #def __ani_q_txt_push(self, txt, col, size, xy, secs, fadeIn=False, overlay=False):
-    #    font = pygame.font.Font("springtime_in_april.ttf", size)
-    #    alpha = 255
-    #    t = font.render(txt, 1, (col[0], col[1], col[2], int(alpha)))
-    #    self.ani_q.append( {'type' : 'TXT',
-    #                        'txt' : t,
-    #                        'xy' : xy, 
-    #                        'tilt': 0,
-    #                        'scale': 1,
-    #                        'overlay':overlay} )
-    
     def __ani_q_txt_push(self, txt, col, size, xy, secs, fadeIn=False, overlay=False):
         font = pygame.font.Font("springtime_in_april.ttf", size)
         alpha = 255 * (not fadeIn)
-        for _ in range( int(math.ceil(secs*self.fps)) ):
+        num = int(math.ceil(secs*self.fps)) if fadeIn else 1
+        for _ in range( num ):
             alpha += ( 255.0/(secs*self.fps) ) * fadeIn
             alpha = min(255, alpha)
             t = font.render(txt, 1, (col[0], col[1], col[2], int(alpha)))

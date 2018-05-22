@@ -17,6 +17,7 @@ from picturelist import *
 from introanimation import *
 from capture import *
 from process import *
+from printupload import *
 
 def sig_green_handler(signum, frame):
     print 'Green handler called with signal'
@@ -77,7 +78,7 @@ def main():
     pose_time = 3
 
     # Is Photo Available
-    photo_upload_en = True
+    upload_en = True
    
     # Printer Option enable?
     printer_en = True
@@ -101,13 +102,13 @@ def main():
 
     camera = CameraModule(image_size)
     
-    if printer_enable:
+    if printer_en:
         from printer import PrinterModule
         printer  = PrinterModule()
         if printer == None:
-            printer_enable = False
+            printer_en = False
         else:
-            printer_enable = True
+            printer_en = True
 
     intro_ani = IntroAnimation( gameDisplay, disp_w, disp_h, pictures )
     capture   = Capture ( gameDisplay, disp_w, disp_h, camera, fps )
@@ -115,7 +116,8 @@ def main():
     printupload = PrintUpload( gameDisplay, disp_w, disp_h,fps, printer)
 
     final_photos = []
-    state = "INTRO_S"
+    #state = "INTRO_S"
+    state = "PRINTUP_S"
     while not state == "END":
       
         ### INTRO ANIMATION STATES ###
@@ -181,7 +183,7 @@ def main():
             #Update Photo Upload/ Printer Enable Switch State
             # TODO
 
-            process.start( final_photos, photo_upload_en, printer_en )
+            printupload.start( final_photos, upload_en, printer_en )
             pygame.display.update()
             state = "PRINTUP"
         
