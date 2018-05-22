@@ -111,8 +111,8 @@ def main():
             printer_en = True
 
     intro_ani = IntroAnimation( gameDisplay, disp_w, disp_h, pictures )
-    capture   = Capture ( gameDisplay, disp_w, disp_h, camera, fps )
-    process  = Process( gameDisplay, disp_w, disp_h, pictures, fps )
+    capture   = Capture ( gameDisplay, disp_w, disp_h, fps, camera )
+    process  = Process( gameDisplay, disp_w, disp_h, fps, pictures )
     upload = Upload( gameDisplay, disp_w, disp_h,fps)
 
     final_photos = []
