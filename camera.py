@@ -118,7 +118,6 @@ class Camera_gPhoto:
             raise CameraException("No preview supported!")
 
     def take_picture(self, filename="/tmp/picture.jpg"):
-        print fake_enabled
         if fake_enabled:
             filename = "dbg.jpg"
         elif gphoto2cffi_enabled:

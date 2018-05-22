@@ -43,7 +43,6 @@ class Capture:
         self.cap_h = 250
         
         self.cap_points = [ ( ((self.cap_w+self.cap_s)*i)+self.cap_s, h - self.cap_h - 10 ) for i in range (0,self.cap_num) ]
-        print self.cap_points
         self.__gen_info()
 
         #Preview Camera
@@ -99,10 +98,10 @@ class Capture:
 
 
     def __ani_q_img_push(self, obj, xy, secs, fadeIn=False, overlay=False):
-        alpha = 255 * (not fadeIn)
+        alpha = 0 if fadeIn else 255
         num = int(math.ceil(secs*self.fps)) if fadeIn else 1
         for _ in range( num ):
-            alpha += ( 255.0/(secs*self.fps) ) * fadeIn
+            alpha += ( 255.0/(secs*self.fps) ) if fadeIn else 0
             self.ani_q.append( {'type' : 'IMG',
                                 'obj' : obj, 
                                 'alpha' : int(alpha), 
@@ -121,10 +120,11 @@ class Capture:
     
     def __ani_q_txt_push(self, txt, col, size, xy, secs, fadeIn=False, overlay=False):
         font = pygame.font.Font("springtime_in_april.ttf", size)
-        alpha = 255 * (not fadeIn)
+        alpha = 0 if fadeIn else 255
         num = int(math.ceil(secs*self.fps)) if fadeIn else 1
         for _ in range( num ):
-            alpha += ( 255.0/(secs*self.fps) ) * fadeIn
+            alpha += ( 255.0/(secs*self.fps) ) if fadeIn else 0
+            alpha = min(255,alpha)
             t = font.render(txt, 1, (col[0], col[1], col[2], int(alpha)))
             self.ani_q.append( {'type' : 'TXT',
                                 'txt' : t,
@@ -204,24 +204,24 @@ class Capture:
         #CAPTURE SCHEDULE
         if   self.cap_cnt == 0 and len(self.ani_q) == 0:
             self.prev_cnt_c = tuple(map(operator.add, self.prev_c, (-50,-100)))
-            self.__ani_q_txt_push("3", (255,255,255), 200, self.prev_cnt_c, 1)
-            self.__ani_q_txt_push("2", (255,255,255), 200, self.prev_cnt_c, 1)
-            self.__ani_q_txt_push("1", (255,255,255), 200, self.prev_cnt_c, 0.5)
+            self.__ani_q_txt_push("3", (255,255,255), 200, self.prev_cnt_c, 1, True)
+            self.__ani_q_txt_push("2", (255,255,255), 200, self.prev_cnt_c, 1, True)
+            self.__ani_q_txt_push("1", (255,255,255), 200, self.prev_cnt_c, 0.5, True)
             self.__ani_q_cmd_push("CAPTURE")
         elif self.cap_cnt == 1 and len(self.ani_q) == 0:
-            self.__ani_q_txt_push("3", (255,255,255), 200, self.prev_cnt_c, 1)
-            self.__ani_q_txt_push("2", (255,255,255), 200, self.prev_cnt_c, 1)
-            self.__ani_q_txt_push("1", (255,255,255), 200, self.prev_cnt_c, 0.5)
+            self.__ani_q_txt_push("3", (255,255,255), 200, self.prev_cnt_c, 1, True)
+            self.__ani_q_txt_push("2", (255,255,255), 200, self.prev_cnt_c, 1, True)
+            self.__ani_q_txt_push("1", (255,255,255), 200, self.prev_cnt_c, 0.5, True)
             self.__ani_q_cmd_push("CAPTURE")
         elif self.cap_cnt == 2 and len(self.ani_q) == 0:
-            self.__ani_q_txt_push("3", (255,255,255), 200, self.prev_cnt_c, 1)
-            self.__ani_q_txt_push("2", (255,255,255), 200, self.prev_cnt_c, 1)
-            self.__ani_q_txt_push("1", (255,255,255), 200, self.prev_cnt_c, 0.5)
+            self.__ani_q_txt_push("3", (255,255,255), 200, self.prev_cnt_c, 1,True)
+            self.__ani_q_txt_push("2", (255,255,255), 200, self.prev_cnt_c, 1,True)
+            self.__ani_q_txt_push("1", (255,255,255), 200, self.prev_cnt_c, 0.5,True)
             self.__ani_q_cmd_push("CAPTURE")
         elif self.cap_cnt == 3 and len(self.ani_q) == 0:
-            self.__ani_q_txt_push("3", (255,255,255), 200, self.prev_cnt_c, 1)
-            self.__ani_q_txt_push("2", (255,255,255), 200, self.prev_cnt_c, 1)
-            self.__ani_q_txt_push("1", (255,255,255), 200, self.prev_cnt_c, 0.5)
+            self.__ani_q_txt_push("3", (255,255,255), 200, self.prev_cnt_c, 1,True)
+            self.__ani_q_txt_push("2", (255,255,255), 200, self.prev_cnt_c, 1,True)
+            self.__ani_q_txt_push("1", (255,255,255), 200, self.prev_cnt_c, 0.5,True)
             self.__ani_q_cmd_push("CAPTURE")
         elif self.cap_cnt == 4 and len(self.ani_q) == 0:
             for _ in range( int(0.5*self.fps) ):

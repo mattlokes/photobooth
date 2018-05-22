@@ -16,6 +16,7 @@ from extratransforms import *
 from pcloud import PyCloud
 import tinyurl
 from multiprocessing import Process as Thread
+from multiprocessing import Queue
 
 
 class PrintUpload:
@@ -78,16 +79,26 @@ class PrintUpload:
             if not match: raise Exception("pCloud folder walk: Could not find \"{0}\"".format(i))
         return folder_walk[-1]
 
-    #def __pcloud_uploadfile( self, f ):
-    #    resp = self.pCloud.uploadfile(files=[f],folrderid=self.pcloud_upload_folder)
-    #    llink = self.pCloud.getfilepublink(fileid=resp['fileids'][0])['link']
-    #    slink = self.__get_tinyurl(llink)
-    #    return slink
-    def __pcloud_uploadfile(self, pc, fid, f, slink ):
-        resp = pc.uploadfile(files=[f],folderid=fid)
-        llink = pc.getfilepublink(fileid=resp['fileids'][0])['link']
-        slink = tinyurl.shorten(llink,"")
-    
+    def __pcloud_uploadfiles(self, pc, fid, f, ret_q ):
+        slinks = []
+        for i in f:
+            retrycnt = 3
+            while( retrycnt > 0):
+                try:
+                    resp = pc.uploadfile(files=[i],folderid=fid)
+                    ll = pc.getfilepublink(fileid=resp['fileids'][0])['link']
+                    sl = tinyurl.shorten(ll,"")
+                    slinks.append(sl)
+                    break
+                except:
+                    print "pCloud Error, retrying login"
+                    self.__pcloud_login()
+                    retrycnt -= 1
+            if retrycnt == 0: #Failed Retries
+                ret_q.put(None)
+                return
+        ret_q.put(slinks[0])
+        return
 
     def __pcloud_test_conn(self):
         #TODO
@@ -128,10 +139,10 @@ class PrintUpload:
 
 
     def __ani_q_img_push(self, obj, xy, secs, fadeIn=False, overlay=False):
-        alpha = 255 * (not fadeIn)
+        alpha = 0 if fadeIn else 255
         num = int(math.ceil(secs*self.fps)) if fadeIn else 1
         for _ in range( num ):
-            alpha += ( 255.0/(secs*self.fps) ) * fadeIn
+            alpha += ( 255.0/(secs*self.fps) ) if fadeIn else 0
             self.ani_q.append( {'type' : 'IMG',
                                 'obj' : obj, 
                                 'alpha' : int(alpha), 
@@ -153,7 +164,7 @@ class PrintUpload:
         alpha = 255 * (not fadeIn)
         num = int(math.ceil(secs*self.fps)) if fadeIn else 1
         for _ in range( num ):
-            alpha += ( 255.0/(secs*self.fps) ) * fadeIn
+            alpha += ( 255.0/(secs*self.fps) ) if fadeIn else 0
             alpha = min(255, alpha)
             t = font.render(txt, 1, (col[0], col[1], col[2], int(alpha)))
             self.ani_q.append( {'type' : 'TXT',
@@ -182,8 +193,13 @@ class PrintUpload:
             t = item['tilt']
             s = item['scale']
             img = item['obj']
-            img.set_alpha(item['alpha'])
-            self.gameDisplay.blit(img, xy)
+            if img.get_flags() & 0x00010000: #Per Pixel Alpha
+                dimg = ExtraTransforms.set_alpha( img.copy(), item['alpha'] )
+            else:
+                dimg = img
+                img.set_alpha(item['alpha'])
+
+            self.gameDisplay.blit(dimg, xy)
 
             if item['overlay']:
                 self.overlay_buffer.append(item)
@@ -196,24 +212,27 @@ class PrintUpload:
         elif item['type'] == 'CMD':
             if item['cmd'] == 'UPLOAD':
                 if self.pcloud_upload is None: #No Upload, Start one
-                    self.upload_link = ""
-                    print "pCloud Starting Upload"
-                    self.pcloud_upload = Thread(target=self.__pcloud_uploadfile, args=(self.pCloud, self.pcloud_upload_folder,"upload_white.png", self.upload_link))
+                    self.pcloud_upload_q = Queue()
+                    #print "pCloud Starting Upload"
+                    self.pcloud_upload = Thread(target=self.__pcloud_uploadfiles,\
+                                                args=( self.pCloud,\
+                                                       self.pcloud_upload_folder,\
+                                                       self.photo_set,\
+                                                       self.pcloud_upload_q ))
                     self.pcloud_upload.start()
-                    self.__ani_q_img_push( self.upload_img, self.upload_bar_img_pos, 0.5, True)
-                    self.__ani_q_img_push( self.upload_bar, self.upload_bar_pos , 0.1, False)
-                    self.__ani_q_txt_push( "Uploading....", (255,255,255), 200,self.upload_bar_txt_pos , 0.1, False)
+                    self.__ani_q_img_push( self.upload_img, self.upload_bar_img_pos, 0.9, True)
                     self.__ani_q_cmd_push("UPLOAD")
                 else:
-                    if self.pcloud_upload.is_alive():
-                        self.__ani_q_img_push( self.upload_img, self.upload_bar_img_pos, 0.5, True)
+                    if self.pcloud_upload.is_alive(): #While Uploading Continue animation
+                        self.__ani_q_img_push( self.upload_img, self.upload_bar_img_pos, 0.9, True)
                         self.__ani_q_img_push( self.upload_bar, self.upload_bar_pos , 0.1, False)
                         self.__ani_q_txt_push( "Uploading....", (255,255,255), 200,self.upload_bar_txt_pos , 0.1, False)
                         self.__ani_q_cmd_push("UPLOAD")
                     else:
-                        print "pCloud Upload Complete"
-                        print self.upload_link
+                        self.upload_link = self.pcloud_upload_q.get()
+                        print "pCloud Upload Complete .. {0}".format(self.upload_link)
                         self.upload_complete = True
+                        self.__ani_q_cmd_push("PRINT")
             elif item['cmd'] == "PRINT":
             
                 self.print_complete = True
@@ -221,7 +240,6 @@ class PrintUpload:
                 pass
             elif item['cmd'] == "COMPLETE":
                 pass
-
 
     def __ani_q_pop(self):
         if len(self.ani_q) > 0:
@@ -276,8 +294,9 @@ class PrintUpload:
         
 
     def reset(self):
-        self.pcloud_upload = None
         self.photo_set = []
+        self.pcloud_upload = None
+        self.upload_link = None
         self.upload_complete = False
         self.print_complete = False
         self.ani_q = []

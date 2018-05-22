@@ -116,8 +116,7 @@ def main():
     printupload = PrintUpload( gameDisplay, disp_w, disp_h,fps, printer)
 
     final_photos = []
-    #state = "INTRO_S"
-    state = "PRINTUP_S"
+    state = "INTRO_S"
     while not state == "END":
       
         ### INTRO ANIMATION STATES ###
@@ -191,8 +190,10 @@ def main():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     state = "END"
-                elif printupload.is_done():
-                    state = "INTRO_S"
+
+            if printupload.is_done():
+                printupload.reset()
+                state = "INTRO_S"
 
             printupload.next()
             pygame.display.update()

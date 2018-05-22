@@ -21,6 +21,7 @@ class ExtraTransforms:
 
     @staticmethod
     def set_alpha(img, alpha):
+        alpha = min(255,alpha) #Incase larger than 255 is given
         alpha_img = pygame.Surface(img.get_rect().size, pygame.SRCALPHA)
         alpha_img.fill((255, 255, 255, alpha))
         img.blit(alpha_img, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
