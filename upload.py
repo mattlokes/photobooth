@@ -19,9 +19,9 @@ from multiprocessing import Process as Thread
 from multiprocessing import Queue
 
 
-class PrintUpload:
+class Upload:
 
-    def __init__(self, gd, w, h, fps, printer):
+    def __init__(self, gd, w, h, fps):
 
         self.pcloud_pass_file = ".pcloud_pass"
         self.pcloud_path = "/photobooth/craig_lucy_wedding_2018"
@@ -30,7 +30,6 @@ class PrintUpload:
         self.gameDisplay = gd
         self.disp_w = w
         self.disp_h = h
-        self.printer = printer
         self.fps = fps
 
         self.reset()
@@ -231,15 +230,11 @@ class PrintUpload:
                     else:
                         self.upload_link = self.pcloud_upload_q.get()
                         print "pCloud Upload Complete .. {0}".format(self.upload_link)
-                        self.upload_complete = True
-                        self.__ani_q_cmd_push("PRINT")
-            elif item['cmd'] == "PRINT":
-            
-                self.print_complete = True
+                        self.__ani_q_cmd_push("COMPLETE")
             elif item['cmd'] == "NOP":
                 pass
             elif item['cmd'] == "COMPLETE":
-                pass
+                self.upload_complete = True
 
     def __ani_q_pop(self):
         if len(self.ani_q) > 0:
@@ -248,7 +243,6 @@ class PrintUpload:
 
     def start(self, photo_set, upload_en, print_en):
         self.upload_complete = False
-        self.print_complete = False
         self.gameDisplay.fill((200,200,200))
         
         self.photo_set = photo_set
@@ -298,9 +292,8 @@ class PrintUpload:
         self.pcloud_upload = None
         self.upload_link = None
         self.upload_complete = False
-        self.print_complete = False
         self.ani_q = []
         self.overlay_buffer = []
 
     def is_done(self):
-        return self.upload_complete and self.print_complete
+        return self.upload_complete
