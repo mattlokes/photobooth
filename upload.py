@@ -15,18 +15,20 @@ from state import *
 
 from pcloud import PyCloud
 import tinyurl
+import qrcode
 from multiprocessing import Process as Thread
 from multiprocessing import Queue
 
 
 class Upload(State):
 
-    def __init__(self, gd, w, h, fps):
-        State.__init__(self, gd, w, h, fps)
+    def __init__(self, gd, w, h, fps, gpio):
+        State.__init__(self, gd, w, h, fps, gpio)
         self.pcloud_pass_file = ".pcloud_pass"
         self.pcloud_path = "/photobooth/craig_lucy_wedding_2018"
 
         self.gen_upload_bar()
+        self.gen_upload_menu()
 
         print "pCloud Login.."
         self.pcloud_login()
@@ -108,10 +110,58 @@ class Upload(State):
         self.upload_bar_pos = (0,((self.disp_h-film_h)/2))
         self.upload_bar_txt_pos = (50, ((self.disp_h-film_h)/2) +20 )
         self.upload_bar_img_pos = (1200,(self.disp_h-film_h)/2)
+    
+    def gen_upload_menu(self):
+        #Film Strip Background
+        surf = pygame.Surface( (400,self.disp_h+200), pygame.SRCALPHA)
+        surf.fill((40,40,40))
+    
+        #Create Film strip Holes
+        x1 = 15
+        x2 = surf.get_rect().size[0] - 2*x1 
+        y = 0
+        while y < surf.get_rect().size[1]:
+            for i in range (0, x1):
+                for j in range (0, x1):
+                    surf.set_at( (x1+j,y+i), (255,255,255,0))
+                    surf.set_at( (x2+j,y+i), (255,255,255,0))
+            y += 2*x1
+        
+        #Rotate Film Strip
+        surf = pygame.transform.rotozoom(surf, 10, 1)
+        
+        #Create Info Text
+        font = pygame.font.Font("springtime_in_april.ttf", 100)
+        radius = 90
+        l0 = font.render("Print", 1, (255,255,255))
+        surf.blit(l0, (150, 220))
+        #Generate Gradient Button Image
+        for i in [float(x)/20 for x in range(10,21)]:
+           pygame.draw.circle(surf, (71*i, 211*i, 59*i), (282,425), radius)
+           radius -= 2
+
+        self.upload_menu = surf
+        self.upload_menu_pos = (-50,-100)
+        #self.upload_menu_bar_pos = (0,((self.disp_h-film_h)/2))
+        #self.upload_menu_bar_txt_pos = (50, ((self.disp_h-film_h)/2) +20 )
+
+    def gen_qr(self, link):
+        qr = qrcode.QRCode( version=1,
+                            error_correction=qrcode.constants.ERROR_CORRECT_L,
+                            box_size=10,
+                            border=4 )
+        qr.add_data(link)
+        qr.make(fit=True)
+
+        img = qr.make_image(fill_color="black", back_color="transparent")
+        img.save('/tmp/tmpqr.png')
+        return '/tmp/tmpqr.png'
 
 
 
     def start(self, photo_set, upload_en, print_en):
+        self.gpio.set('green_led', 0)
+        self.gpio.set('red_led', 0)
         self.gameDisplay.fill((200,200,200))
         
         self.photo_set = photo_set
@@ -141,7 +191,19 @@ class Upload(State):
             else:
                 self.upload_link = self.pcloud_upload_q.get()
                 print "pCloud Upload Complete .. {0}".format(self.upload_link)
-                self.ani_q_cmd_push("COMPLETE")
+                self.ani_q_cmd_push("UPLOADQR")
+        elif item['cmd'] == 'UPLOADQR':
+            self.gpio.set('green_led', 1)
+            self.gpio.set('red_led', 0)
+            qr_path = self.gen_qr(self.upload_link)
+            self.gameDisplay.fill((200,200,200))
+            qr_img = pygame.image.load(qr_path)
+            qr_pos = ((self.disp_w - qr_img.get_size()[0])/2, (self.disp_h - qr_img.get_size()[1])/2)
+            self.ani_q_img_push( qr_img, qr_pos , 0.1, False)
+            self.ani_q_img_push( self.upload_menu, self.upload_menu_pos, 0.1, False)
+            #self.ani_q_img_push( self.upload_bar, self.upload_menu_bar_pos , 0.1, False, False)
+            #self.ani_q_txt_push( self.upload_link, (255,255,255), 150,self.upload_menu_bar_txt_pos , 0.1, False)
+            #self.ani_q_cmd_push("COMPLETE")
 
     def stop(self):
         pass

@@ -23,8 +23,8 @@ pygame.camera.init()
 
 class Capture(State):
 
-    def __init__(self, gd, w, h, fps, cam):
-        State.__init__(self, gd, w, h, fps)
+    def __init__(self, gd, w, h, fps, gpio, cam):
+        State.__init__(self, gd, w, h, fps, gpio)
         self.cam = cam
 
         #Generate ani points
@@ -103,6 +103,8 @@ class Capture(State):
 
 
     def start(self):
+        self.gpio.set('green_led', 0)
+        self.gpio.set('red_led', 0)
         self.gameDisplay.fill((200,200,200))
         self.ani_q_img_push( self.info_bar, (0, self.disp_h - self.info_bar.get_size()[1]), 0, False, True)
         

@@ -9,13 +9,14 @@ from extratransforms import *
 
 class State:
 
-    def __init__(self, gd, w, h, fps):
+    def __init__(self, gd, w, h, fps, gpio):
 
         #Generate info
         self.gameDisplay = gd
         self.disp_w = w
         self.disp_h = h
         self.fps = fps
+        self.gpio = gpio
 
         self.reset()
 
@@ -140,6 +141,8 @@ class State:
         self.ani_q = []
         self.overlay_buffer = []
         self.state_complete = False
+        self.gpio.set("green_led", 0)
+        self.gpio.set("red_led", 0)
 
     def is_done(self):
         return self.state_complete

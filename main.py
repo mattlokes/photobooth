@@ -11,7 +11,7 @@ from time import sleep, clock
 from PIL import Image
 
 from camera import CameraException, Camera_gPhoto as CameraModule
-from events import Rpi_GPIO as GPIO
+from gpio import Gpio as GPIO
 
 from picturelist import *
 from introanimation import *
@@ -20,72 +20,51 @@ from process import *
 from upload import *
 
 def sig_green_handler(signum, frame):
-    print 'Green handler called with signal'
+    stim = "GPIO" if frame == None else "Signal"
+    print 'Green handler called from ' + stim
     green_event = pygame.event.Event( pygame.USEREVENT, sig='green')
     pygame.event.post(green_event)
 
 def sig_red_handler(signum, frame):
-    print 'Red handler called with signal'
+    stim = "GPIO" if frame == None else "Signal"
+    print 'Red handler called from ' + stim
     red_event = pygame.event.Event( pygame.USEREVENT, sig='red')
     pygame.event.post(red_event)
 
+def handle_gpio( channel ):
+    print channel
+    if channel == gpio_green_button:
+        sig_green_handler(None, None)
+    elif channel == gpio_red_button:
+        sig_red_handler(None, None)
+    else:
+        print "Warning, dodgy GPIO Seen!"
+
+
 def green_press ( e ):
-    if e.type == pygame.KEYDOWN:             #KEYBOARD 
+    if e.type == pygame.KEYDOWN:      #KEYBOARD 
         if e.key == pygame.K_g:
             return True
-    elif e.type == 3:                        #GPIO
-        pass #TODO
-    elif e.type == pygame.USEREVENT:  #SIGNAL
+    elif e.type == pygame.USEREVENT:  #SIGNAL/GPIO
         if e.sig == "green":
             return True
     else:
         return False
 
 def red_press ( e ):
-    if e.type == pygame.KEYDOWN:             #KEYBOARD
+    if e.type == pygame.KEYDOWN:        #KEYBOARD
         if e.key == pygame.K_r:
             return True
-    elif e.type == 3:                        #GPIO
-        pass #TODO
-    elif e.type == pygame.USEREVENT:  #SIGNAL
+    elif e.type == pygame.USEREVENT:    #SIGNAL/GPIO
         if e.sig == "red":
             return True
     else:
         return False
 
-
 def main():
-    ### Configuration ###
+    global printer_en
+    global upload_en
 
-    # Screen size
-    disp_w = 1824
-    disp_h = 984
-
-    # Maximum size of assembled image
-    image_size = (2352, 1568)
-
-    # Size of pictures in the assembled image
-    thumb_size = (1176, 784)
-
-    # Image basename
-    picture_basename = datetime.now().strftime("%Y-%m-%d/pic")
-
-    # GPIO channels
-    gpio_shutdown_channel = 24 # pin 18 in all Raspi-Versions
-    gpio_green_channel = 23 # pin 16 in all Raspi-Versions
-    gpio_lamp_channel = 4 # pin 7 in all Raspi-Versions
-
-    pose_time = 3
-
-    # Is Photo Available
-    upload_en = True
-   
-    # Printer Option enable?
-    printer_en = True
-
-    # pygame fps
-    fps = 45
-    
     ### Initialisation ###
     pygame.init()
     gameDisplay = pygame.display.set_mode((disp_w,disp_h),pygame.FULLSCREEN)
@@ -110,10 +89,11 @@ def main():
         else:
             printer_en = True
 
-    intro_ani = IntroAnimation( gameDisplay, disp_w, disp_h, pictures )
-    capture   = Capture ( gameDisplay, disp_w, disp_h, fps, camera )
-    process  = Process( gameDisplay, disp_w, disp_h, fps, pictures )
-    upload = Upload( gameDisplay, disp_w, disp_h,fps)
+    
+    intro_ani = IntroAnimation( gameDisplay, disp_w, disp_h, fps, gpio, pictures )
+    capture   = Capture ( gameDisplay, disp_w, disp_h, fps, gpio, camera )
+    process  = Process( gameDisplay, disp_w, disp_h, fps, gpio, pictures )
+    upload = Upload( gameDisplay, disp_w, disp_h,fps, gpio)
 
     final_photos = []
     state = "INTRO_S"
@@ -169,7 +149,7 @@ def main():
                     if green_press( event):  
                         final_photos = process.get_result()
                         process.reset()
-                        state = "PRINTUP_S"
+                        state = "UPLOAD_S"
                     elif red_press( event ): #Retake
                         process.reset()
                         state = "CAPTURE_S"
@@ -177,16 +157,15 @@ def main():
             pygame.display.update()
         
         ### PRINTER UPLOAD STATES ###
-        if state == "PRINTUP_S":
-
+        if state == "UPLOAD_S":
             #Update Photo Upload/ Printer Enable Switch State
             # TODO
 
             upload.start( final_photos, upload_en, printer_en )
             pygame.display.update()
-            state = "PRINTUP"
+            state = "UPLOAD"
         
-        if state == "PRINTUP":
+        if state == "UPLOAD":
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     state = "END"
@@ -203,5 +182,42 @@ def main():
     pygame.quit()
     quit()
 
+
+### Configuration ###
+
+# Screen size
+disp_w = 1824
+disp_h = 984
+
+# Maximum size of assembled image
+image_size = (2352, 1568)
+
+# Size of pictures in the assembled image
+thumb_size = (1176, 784)
+
+# Image basename
+picture_basename = datetime.now().strftime("%Y-%m-%d/pic")
+
+# GPIO channels
+gpio_green_button = 6
+gpio_green_led = 13
+gpio_red_button = 5
+gpio_red_led = 19
+
+gpio = GPIO(handle_gpio, 
+            [gpio_green_button,gpio_red_button], 
+            [gpio_green_led, gpio_red_led],
+            in_alias=['green_but','red_but'],
+            out_alias=['green_led','red_led'],
+           )
+
+# Is Photo Available
+upload_en = True
+
+# Printer Option enable?
+printer_en = True
+
+# pygame fps
+fps = 45
 
 main()

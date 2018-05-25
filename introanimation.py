@@ -13,11 +13,14 @@ from extratransforms import *
 
 class IntroAnimation:
 
-    def __init__(self, gd, w, h, pl):
+    def __init__(self, gd, w, h, fps, gpio, pl):
         self.gameDisplay = gd
         self.disp_w = w
         self.disp_h = h 
+        self.fps = fps
+        self.gpio = gpio
         self.pictures = pl
+        
 
         #Initialize ani_q
         self.ani_q = []
@@ -103,6 +106,8 @@ class IntroAnimation:
             self.c_ani_q_item = None
 
     def start(self):
+        self.gpio.set('green_led', 1)
+        self.gpio.set('red_led', 0)
         self.gameDisplay.fill((200,200,200))
         self.c_ani_q_item = None
         self.next()

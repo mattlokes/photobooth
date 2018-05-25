@@ -19,8 +19,8 @@ from extratransforms import *
 
 class Process(State):
 
-    def __init__(self, gd, w, h, fps, pic):
-        State.__init__(self, gd, w, h, fps)  
+    def __init__(self, gd, w, h, fps, gpio, pic):
+        State.__init__(self, gd, w, h, fps, gpio)  
         self.pictures = pic
 
         self.gen_processing_bar()
@@ -71,7 +71,7 @@ class Process(State):
         #Create Info Text
         font = pygame.font.Font("springtime_in_april.ttf", 100)
         radius = 90
-        l0 = font.render("Print", 1, (255,255,255))
+        l0 = font.render("Upload", 1, (255,255,255))
         l1 = font.render("Retake", 1, (255,255,255))
         surf.blit(l0, (150, 220))
         #Generate Gradient Button Image
@@ -176,6 +176,8 @@ class Process(State):
             self.ani_q_cmd_push("PROCESSPREVIEW")
 
         elif item['cmd'] == 'PROCESSPREVIEW':
+            self.gpio.set('green_led', 1)
+            self.gpio.set('red_led', 1)
             
             self.gameDisplay.fill((200,200,200))
             img = pygame.image.load(self.final_photos[0])
@@ -189,6 +191,8 @@ class Process(State):
             self.ani_q_cmd_push("COMPLETE")
 
     def start(self, photo_set, photo_set_thumbs):
+        self.gpio.set('green_led', 0)
+        self.gpio.set('red_led', 0)
         self.gameDisplay.fill((200,200,200))
        
         self.photo_set = photo_set
