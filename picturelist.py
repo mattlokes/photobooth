@@ -5,6 +5,7 @@ from datetime import datetime
 from glob import glob
 from sys import exit
 from time import sleep, clock
+from time import gmtime, strftime
 
 class PictureList:
     """A simple helper class.
@@ -27,7 +28,10 @@ class PictureList:
         dirname = os.path.dirname(self.basename)
         if not os.path.exists(dirname):
             os.makedirs(dirname)
+            self.log_create(dirname)
 
+
+        self.log = dirname + "/log.csv"
         # Find existing files
         self.count_pattern = "[0-9]" * self.count_width
         pictures = glob(self.basename + self.count_pattern + self.suffix)
@@ -35,10 +39,12 @@ class PictureList:
         # Get number of latest file
         if len(pictures) == 0:
             self.counter = 0
+            self.counter_last = 0
         else:
             pictures.sort()
             last_picture = pictures[-1]
             self.counter = int(last_picture[-(self.count_width+len(self.suffix)):-len(self.suffix)])
+            self.counter_last = self.counter - 1
 
         # Print initial infos
         print("Info: Number of last existing file: " + str(self.counter))
@@ -50,7 +56,11 @@ class PictureList:
     def get_last(self):
         return self.get(self.counter)
 
+    def get_last_num(self):
+        return self.counter_last
+
     def get_next(self):
+        self.counter_last = self.counter
         self.counter += 1
         return self.get(self.counter)
 
@@ -59,4 +69,24 @@ class PictureList:
             return [ "default.jpg" ]
         else:
             return glob(self.basename + self.count_pattern + self.suffix)
+
+    def log_add(self, path, link, uploaded, printed ):
+        uploaded = "Yes" if uploaded else "No"
+        printed = "Yes" if uploaded else "No"
+        t =strftime("%d-%m-%Y %H:%M:%S", gmtime())
+        f= open(self.log,"a")
+        #f.write("Num,Time,Path,Link,Uploaded,Printed")
+        f.write("\"{0}\",\"{1}\",\"{2}\",\"{3}\",\"{4}\",\"{5}\"\n". format( 
+                                                   self.get_last_num(),
+                                                   t,
+                                                   path,
+                                                   link,
+                                                   uploaded,
+                                                   printed))
+        f.close()
+
+    def log_create(self, dirname):
+        f= open(dirname + "/log.csv","w+")
+        f.write("Num,Time,Path,Link,Uploaded,Printed\n")
+        f.close()
 

@@ -20,6 +20,7 @@ from introanimation import *
 from capture import *
 from process import *
 from upload import *
+from prin import *
 
 def wait_for_internet_connection():
     print "Testing Internet Connection..."
@@ -117,8 +118,9 @@ def main():
     capture   = Capture ( gameDisplay, disp_w, disp_h, fps, gpio, camera )
     process  = Process( gameDisplay, disp_w, disp_h, fps, gpio, pictures )
     upload = Upload( gameDisplay, disp_w, disp_h,fps, gpio)
+    prin  = Prin( gameDisplay, disp_w, disp_h,fps, gpio, printer )
 
-    final_photos = []
+
     state = "INTRO_S"
     while not state == "END":
       
@@ -134,6 +136,11 @@ def main():
 
         ### INTRO ANIMATION STATES ###
         if state == "INTRO_S":
+            final_photos = []
+            final_link = ""
+            final_uploaded = upload_en
+            final_printed = printer_en
+
             intro_ani.start()
             pygame.display.update()
             state = "INTRO"
@@ -182,7 +189,14 @@ def main():
                     if green_press( event):  
                         final_photos = process.get_result()
                         process.reset()
-                        state = "UPLOAD_S"
+
+                        if upload_en:
+                            state = "UPLOAD_S"
+                        elif printer_en:
+                            state = "PRINT_S"
+                        else:
+                            state = "DONE"
+
                     elif red_press( event ): #Retake
                         process.reset()
                         state = "CAPTURE_S"
@@ -203,12 +217,44 @@ def main():
                 if event.type == pygame.QUIT:
                     state = "END"
                 elif upload.is_done():
+                    final_link = upload.upload_link
+                    #TODO upload success
                     if green_press( event):
                         upload.reset()
-                        state = "INTRO_S"
+                        
+                        if printer_en:
+                            state = "PRINT_S"
+                        else:
+                            state = "DONE"
 
             upload.next()
             pygame.display.update()
+        
+        ### PRINTER UPLOAD STATES ###
+        if state == "PRINT_S":
+            #Update Photo Upload/ Printer Enable Switch State
+            # TODO
+
+            prin.start( final_photos, printer_en )
+            pygame.display.update()
+            state = "PRINT"
+        
+        if state == "PRINT":
+            for event in event_list:
+                if event.type == pygame.QUIT:
+                    state = "END"
+            
+            if prin.is_done():
+                #TODO Get print success value
+                prin.reset()
+                state = "DONE"
+
+            prin.next()
+            pygame.display.update()
+
+        if state == "DONE":
+            pictures.log_add( final_photos[0], final_link, final_uploaded, final_printed )
+            state = "INTRO_S"
        
         clock.tick(fps)
     
