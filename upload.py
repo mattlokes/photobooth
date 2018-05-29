@@ -182,6 +182,7 @@ class Upload(State):
                                               self.pcloud_upload_q ))
            self.pcloud_upload.start()
            self.ani_q_cmd_push("UPLOADWAIT")
+
         elif item['cmd'] == 'UPLOADWAIT':
             if self.pcloud_upload.is_alive(): #While Uploading Continue animation
                 self.ani_q_img_push( self.upload_img, self.upload_bar_img_pos, 0.9, True,False,False)
@@ -192,18 +193,19 @@ class Upload(State):
                 self.upload_link = self.pcloud_upload_q.get()
                 print "pCloud Upload Complete .. {0}".format(self.upload_link)
                 self.ani_q_cmd_push("UPLOADQR")
+
         elif item['cmd'] == 'UPLOADQR':
             self.gpio.set('green_led', 1)
             self.gpio.set('red_led', 0)
             qr_path = self.gen_qr(self.upload_link)
             self.gameDisplay.fill((200,200,200))
             qr_img = pygame.image.load(qr_path)
-            qr_pos = ((self.disp_w - qr_img.get_size()[0])/2, (self.disp_h - qr_img.get_size()[1])/2)
+            qr_pos = (((self.disp_w - qr_img.get_size()[0])/2)+200, ((self.disp_h - qr_img.get_size()[1])/2)-175 )
+            link_pos = (((self.disp_w)/2)-100, ((self.disp_h)/2))
             self.ani_q_img_push( qr_img, qr_pos , 0.1, False)
+            self.ani_q_txt_push( self.upload_link, (40,40,40), 75, link_pos, 0.1, False)
             self.ani_q_img_push( self.upload_menu, self.upload_menu_pos, 0.1, False)
-            #self.ani_q_img_push( self.upload_bar, self.upload_menu_bar_pos , 0.1, False, False)
-            #self.ani_q_txt_push( self.upload_link, (255,255,255), 150,self.upload_menu_bar_txt_pos , 0.1, False)
-            #self.ani_q_cmd_push("COMPLETE")
+            self.ani_q_cmd_push("COMPLETE")
 
     def stop(self):
         pass

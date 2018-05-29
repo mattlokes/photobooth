@@ -168,10 +168,10 @@ def main():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     state = "END"
-
-            if upload.is_done():
-                upload.reset()
-                state = "INTRO_S"
+                elif upload.is_done():
+                    if green_press( event):
+                        upload.reset()
+                        state = "INTRO_S"
 
             upload.next()
             pygame.display.update()

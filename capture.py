@@ -83,12 +83,12 @@ class Capture(State):
     def gen_instr_bars(self):
         film_h = 200
         instr_bars_txt = [ 
-               "Step 1: Four photos will be taken.",
-               "Step 2: Photo preview, you\'ll get the opportunity to retake!",
-               "Step 3: Upload to the cloud. Use your phone camera to get the link.",
-               "Step4 : Two copies printed. One for you, one for the Guestbook!"]
-        self.instr_bars_ang = [3,-3,4,-5]
-        self.instr_bars_pos = [(-10,-90), (-10,film_h), (-10,2*film_h), (-10,3*film_h+80)]
+               "Step 1: Capture 4 photos.",
+               "Step 2: Preview Photos",
+               "Step 3: Upload to the Cloud.",
+               "Step 4: Print 2 copies. One for you, one for the Guestbook!"]
+        self.instr_bars_ang = [3,-3,3,-2]
+        self.instr_bars_pos = [(-10,-50), (-10,film_h+40), (-10,2*film_h+40), (-10,3*film_h+120)]
         self.instr_bars = [] #Will be 4 objects.
 
         surf = pygame.Surface( (self.disp_w+10, film_h ), pygame.SRCALPHA)
