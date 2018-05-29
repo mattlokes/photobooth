@@ -29,6 +29,7 @@ class Upload(State):
 
         self.gen_upload_bar()
         self.gen_upload_menu()
+        self.gen_upload_info()
 
         print "pCloud Login.."
         self.pcloud_login()
@@ -144,6 +145,34 @@ class Upload(State):
         self.upload_menu_pos = (-50,-100)
         #self.upload_menu_bar_pos = (0,((self.disp_h-film_h)/2))
         #self.upload_menu_bar_txt_pos = (50, ((self.disp_h-film_h)/2) +20 )
+    
+    def gen_upload_info(self):
+        film_h = 200
+        surf = pygame.Surface( (self.disp_w+10, film_h ), pygame.SRCALPHA)
+        surf.fill((40,40,40))
+    
+        #Create Film strip Holes
+        y1 = 15
+        y2 = surf.get_size()[1] - 2*y1 
+        x = 0
+        while x < surf.get_size()[0]:
+            for i in range (0, y1):
+                for j in range (0, y1):
+                    surf.set_at( (x+j,y1+i), (255,255,255,0))
+                    surf.set_at( (x+j,y2+i), (255,255,255,0))
+            x += 2*y1
+ 
+        self.upload_info_pos = (0,self.disp_h-250)
+        self.upload_info = []
+        info_bars_txt = ["Hold up your smartphone camera app to this QR code...",
+                         "No phone? Dont worry the link will be printed on the Photo!"]
+        for txt in info_bars_txt:
+            bar = surf.copy()
+            font = pygame.font.Font("springtime_in_april.ttf", 75)
+            t = font.render(txt, 1, (255,255,255))
+            bar.blit( t,(250,50))
+            self.upload_info.append(bar)
+            
 
     def gen_qr(self, link):
         qr = qrcode.QRCode( version=1,
@@ -206,9 +235,18 @@ class Upload(State):
             self.ani_q_txt_push( self.upload_link, (40,40,40), 75, link_pos, 0.1, False)
             self.ani_q_img_push( self.upload_menu, self.upload_menu_pos, 0.1, False)
             self.ani_q_cmd_push("COMPLETE")
+            self.ani_q_cmd_push("UPLOADINFO")
+        
+        elif item['cmd'] == 'UPLOADINFO':
+            for info in self.upload_info:
+                self.ani_q_img_push( info, self.upload_info_pos , 0.4, True, forceSurfaceAlpha=False)
+                self.ani_q_pause_push(3)
+            
+            self.ani_q_cmd_push("UPLOADINFO")
 
-    def stop(self):
-        pass
+
+
+
 
     def reset(self):
         State.reset(self)

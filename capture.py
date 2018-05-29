@@ -107,10 +107,10 @@ class Capture(State):
                     surf.set_at( (x+j,y2+i), (255,255,255,0))
             x += 2*y1
         
-        for idx in range(4):
+        for txt in instr_bars_txt:
             bar = surf.copy()
             font = pygame.font.Font("springtime_in_april.ttf", 75)
-            t = font.render(instr_bars_txt[idx], 1, (255,255,255))
+            t = font.render(txt, 1, (255,255,255))
             bar.blit( t,(50,50))
             self.instr_bars.append(bar)
 
@@ -119,14 +119,10 @@ class Capture(State):
         if item['cmd'] == 'INSTRUCT':
             self.gameDisplay.fill((200,200,200))
             for idx,bar in enumerate(self.instr_bars):
-                self.ani_q.append( {'type' : 'IMG', 
-                                    'obj' : bar,
-                                    'alpha' : 255,
-                                    'xy' : self.instr_bars_pos[idx],                  
-                                    'tilt': self.instr_bars_ang[idx],
-                                    'scale': 1,                 
-                                    'overlay': False,
-                                    'fsa': True} )
+                self.ani_q_img_push ( bar, self.instr_bars_pos[idx],
+                                     0.5, True, 
+                                     tilt=self.instr_bars_ang[idx],
+                                     forceSurfaceAlpha=False )
                 self.ani_q_pause_push(4)
             self.ani_q_cmd_push("CAPTURE_START")
         

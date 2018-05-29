@@ -20,7 +20,7 @@ class State:
 
         self.reset()
 
-    def ani_q_img_push(self, obj, xy, secs, fadeIn=False, overlay=False, forceSurfaceAlpha=True):
+    def ani_q_img_push(self, obj, xy, secs, fadeIn=False, overlay=False, forceSurfaceAlpha=True, tilt=0):
         alpha = 0 if fadeIn else 255
         num = int(math.ceil(secs*self.fps)) if fadeIn else 1
         for _ in range( num ):
@@ -30,7 +30,7 @@ class State:
                                 'obj' : obj, 
                                 'alpha' : int(alpha), 
                                 'xy' : xy, 
-                                'tilt': 0,
+                                'tilt': tilt,
                                 'scale': 1,
                                 'overlay': False,
                                 'fsa': forceSurfaceAlpha} )
@@ -39,7 +39,7 @@ class State:
                                 'obj' : obj, 
                                 'alpha' : int(alpha), 
                                 'xy' : xy, 
-                                'tilt': 0,
+                                'tilt': tilt,
                                 'scale': 1,
                                 'overlay': True,
                                 'fsa':forceSurfaceAlpha } )
