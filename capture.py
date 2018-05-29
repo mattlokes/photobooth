@@ -35,6 +35,7 @@ class Capture(State):
         
         self.cap_points = [ ( ((self.cap_w+self.cap_s)*i)+self.cap_s, h - self.cap_h - 10 ) for i in range (0,self.cap_num) ]
         self.gen_info()
+        self.gen_instr_bars()
 
         #Preview Camera
         self.preview_size = (1280,720)
@@ -78,10 +79,67 @@ class Capture(State):
             x += 2*y1
         
         self.info_bar = surf
+    
+    def gen_instr_bars(self):
+        film_h = 200
+        instr_bars_txt = [ 
+               "Step 1: Four photos will be taken.",
+               "Step 2: Photo preview, you\'ll get the opportunity to retake!",
+               "Step 3: Upload to the cloud. Use your phone camera to get the link.",
+               "Step4 : Two copies printed. One for you, one for the Guestbook!"]
+        self.instr_bars_ang = [3,-3,4,-5]
+        self.instr_bars_pos = [(-10,-90), (-10,film_h), (-10,2*film_h), (-10,3*film_h+80)]
+        self.instr_bars = [] #Will be 4 objects.
+
+        surf = pygame.Surface( (self.disp_w+10, film_h ), pygame.SRCALPHA)
+        surf.fill((40,40,40))
+    
+        #Create Film strip Holes
+        y1 = 15
+        y2 = surf.get_size()[1] - 2*y1 
+        x = 0
+        while x < surf.get_size()[0]:
+            for i in range (0, y1):
+                for j in range (0, y1):
+                    surf.set_at( (x+j,y1+i), (255,255,255,0))
+                    surf.set_at( (x+j,y2+i), (255,255,255,0))
+            x += 2*y1
+        
+        for idx in range(4):
+            bar = surf.copy()
+            font = pygame.font.Font("springtime_in_april.ttf", 75)
+            t = font.render(instr_bars_txt[idx], 1, (255,255,255))
+            bar.blit( t,(50,50))
+            self.instr_bars.append(bar)
+
 
     def state_cmd(self, item):
+        if item['cmd'] == 'INSTRUCT':
+            self.gameDisplay.fill((200,200,200))
+            for idx,bar in enumerate(self.instr_bars):
+                self.ani_q.append( {'type' : 'IMG', 
+                                    'obj' : bar,
+                                    'alpha' : 255,
+                                    'xy' : self.instr_bars_pos[idx],                  
+                                    'tilt': self.instr_bars_ang[idx],
+                                    'scale': 1,                 
+                                    'overlay': False,
+                                    'fsa': True} )
+                self.ani_q_pause_push(6)
+            self.ani_q_cmd_push("CAPTURE_START")
+        
+        elif item['cmd'] == 'CAPTURE_START':
+            self.gameDisplay.fill((200,200,200))
+            self.preview_enabled = True
+            self.ani_q_img_push( self.info_bar, (0, self.disp_h - self.info_bar.get_size()[1]), 0, False, True)
+        
+            self.ani_q_pause_push(3)
+        
+            self.prev_cnt_c = tuple(map(operator.add, self.prev_c, (-50,-100)))
+            self.schedule_capture()
+            self.next()
        
-        if item['cmd'] == 'CAPTURE':
+        elif item['cmd'] == 'CAPTURE':
             snap = self.cam.take_picture("/tmp/photob_%02d.jpg" % self.cap_cnt)
             self.cap_path[self.cap_cnt] = snap
                 
@@ -106,22 +164,19 @@ class Capture(State):
         self.gpio.set('green_led', 0)
         self.gpio.set('red_led', 0)
         self.gameDisplay.fill((200,200,200))
-        self.ani_q_img_push( self.info_bar, (0, self.disp_h - self.info_bar.get_size()[1]), 0, False, True)
-        
-        self.ani_q_pause_push(3)
-        
-        self.prev_cnt_c = tuple(map(operator.add, self.prev_c, (-50,-100)))
-        self.schedule_capture()
+
+        self.ani_q_cmd_push("INSTRUCT")
         self.next()
 
     def next(self):
 
         #WEBCAM UPDATE
-        if self.precam.query_image():
-            self.snapshot = self.precam.get_image(self.snapshot)
-            self.snapshot = pygame.transform.flip( self.snapshot, False, True)
-            # blit it to the display surface.  simple!
-            self.gameDisplay.blit(self.snapshot, (int((self.disp_w - self.preview_size[0])/2), 0))
+        if self.preview_enabled:
+            if self.precam.query_image():
+                self.snapshot = self.precam.get_image(self.snapshot)
+                self.snapshot = pygame.transform.flip( self.snapshot, False, True)
+                # blit it to the display surface.  simple!
+                self.gameDisplay.blit(self.snapshot, (int((self.disp_w - self.preview_size[0])/2), 0))
         
         #Special case reverse overlay and animation draw
         State.ovr_draw(self)
@@ -131,3 +186,4 @@ class Capture(State):
         State.reset(self)
         self.cap_cnt = 0
         self.cap_thumbs = []
+        self.preview_enabled = False

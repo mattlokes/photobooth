@@ -82,11 +82,15 @@ class State:
             t = item['tilt']
             s = item['scale']
             img = item['obj']
+
             if img.get_flags() & 0x00010000 and not item['fsa']: #Per Pixel Alpha
                 dimg = ExtraTransforms.set_alpha( img.copy(), item['alpha'] )
             else:
                 dimg = img
                 dimg.set_alpha(item['alpha'])
+
+            if t:
+                dimg = pygame.transform.rotozoom(dimg, t, 1)
 
             self.gameDisplay.blit(dimg, xy)
 

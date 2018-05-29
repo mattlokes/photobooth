@@ -32,7 +32,6 @@ def sig_red_handler(signum, frame):
     pygame.event.post(red_event)
 
 def handle_gpio( channel ):
-    print channel
     if channel == gpio_green_button:
         sig_green_handler(None, None)
     elif channel == gpio_red_button:

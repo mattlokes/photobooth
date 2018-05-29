@@ -54,7 +54,6 @@ class Gpio:
 
     def unalias(self, alias):
         m = [ x[0] for x in self.outs.items()+self.ins.items() if x[1]['alias'] == alias]
-        print m
         if len(m) == 1: return m[0]
         else:      return None #Multi Match no match
         
