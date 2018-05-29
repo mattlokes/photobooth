@@ -57,6 +57,8 @@ class Capture(State):
         self.cap_complete = False
    
     def schedule_capture(self):
+        self.ani_q_txt_push("5", (255,255,255), 200, self.prev_cnt_c, 1, True)
+        self.ani_q_txt_push("4", (255,255,255), 200, self.prev_cnt_c, 1, True)
         self.ani_q_txt_push("3", (255,255,255), 200, self.prev_cnt_c, 1, True)
         self.ani_q_txt_push("2", (255,255,255), 200, self.prev_cnt_c, 1, True)
         self.ani_q_txt_push("1", (255,255,255), 200, self.prev_cnt_c, 0.5, True)
@@ -125,7 +127,7 @@ class Capture(State):
                                     'scale': 1,                 
                                     'overlay': False,
                                     'fsa': True} )
-                self.ani_q_pause_push(6)
+                self.ani_q_pause_push(4)
             self.ani_q_cmd_push("CAPTURE_START")
         
         elif item['cmd'] == 'CAPTURE_START':
@@ -187,3 +189,8 @@ class Capture(State):
         self.cap_cnt = 0
         self.cap_thumbs = []
         self.preview_enabled = False
+    
+    def stop(self):
+        self.precam.stop()
+        self.gpio.set('green_led', 0)
+        self.gpio.set('red_led', 0)

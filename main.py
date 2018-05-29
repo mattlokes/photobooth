@@ -6,7 +6,9 @@ import signal
 from datetime import datetime
 from glob import glob
 from sys import exit
+import sys
 from time import sleep, clock
+import urllib2
 
 from PIL import Image
 
@@ -19,6 +21,18 @@ from capture import *
 from process import *
 from upload import *
 
+def wait_for_internet_connection():
+    print "Testing Internet Connection..."
+    for _ in range(120):
+        try:
+            rsp = urllib2.urlopen('http://google.com',timeout=1)
+            print "Internet Connection Sucess!"
+            return True
+        except urllib2.URLError:
+            pass
+    print "Internet Connection Failed!"
+    return False
+
 def sig_green_handler(signum, frame):
     stim = "GPIO" if frame == None else "Signal"
     print 'Green handler called from ' + stim
@@ -28,7 +42,7 @@ def sig_green_handler(signum, frame):
 def sig_red_handler(signum, frame):
     stim = "GPIO" if frame == None else "Signal"
     print 'Red handler called from ' + stim
-    red_event = pygame.event.Event( pygame.USEREVENT, sig='red')
+    red_event = pygame.event.Event( pygame.USEREVENT+1, sig='red')
     pygame.event.post(red_event)
 
 def handle_gpio( channel ):
@@ -54,11 +68,21 @@ def red_press ( e ):
     if e.type == pygame.KEYDOWN:        #KEYBOARD
         if e.key == pygame.K_r:
             return True
-    elif e.type == pygame.USEREVENT:    #SIGNAL/GPIO
+    elif e.type == (pygame.USEREVENT+1):    #SIGNAL/GPIO
         if e.sig == "red":
             return True
     else:
         return False
+
+def reset_combo( el ):
+    if len(el) < 2:
+        return False
+    if el[0].type != pygame.USEREVENT:
+        return False
+    elif el[1].type != pygame.USEREVENT+1:
+        return False
+    else:
+        return True
 
 def main():
     global printer_en
@@ -98,6 +122,16 @@ def main():
     state = "INTRO_S"
     while not state == "END":
       
+        event_list = pygame.event.get()
+
+        if reset_combo(event_list):
+            print "Restarting..."
+            intro_ani.stop()
+            capture.stop()
+            process.stop()
+            upload.stop()
+            os.execv(sys.executable, ['python'] + sys.argv)
+
         ### INTRO ANIMATION STATES ###
         if state == "INTRO_S":
             intro_ani.start()
@@ -105,7 +139,7 @@ def main():
             state = "INTRO"
 
         if state == "INTRO":
-            for event in pygame.event.get():
+            for event in event_list:
                 if event.type == pygame.QUIT:
                     state = "END"
                 elif green_press( event ):
@@ -121,7 +155,7 @@ def main():
             state = "CAPTURE"
 
         if state == "CAPTURE":
-            for event in pygame.event.get():
+            for event in event_list:
                 if event.type == pygame.QUIT:
                     state = "END"
 
@@ -141,7 +175,7 @@ def main():
             state = "PROCESS"
         
         if state == "PROCESS":
-            for event in pygame.event.get():
+            for event in event_list:
                 if event.type == pygame.QUIT:
                     state = "END"
                 elif process.is_done():
@@ -165,7 +199,7 @@ def main():
             state = "UPLOAD"
         
         if state == "UPLOAD":
-            for event in pygame.event.get():
+            for event in event_list:
                 if event.type == pygame.QUIT:
                     state = "END"
                 elif upload.is_done():
@@ -219,4 +253,8 @@ printer_en = True
 # pygame fps
 fps = 45
 
+if upload_en:
+    sleep(5)
+    if not wait_for_internet_connection():
+        exit(0)
 main()
