@@ -27,7 +27,8 @@ class Process(State):
         self.gen_processing_menu()
 
         #Image Quality Config
-        self.image_size = (2352, 1568)
+        self.image_size = (4704, 3136)
+        #self.image_size = (2352, 1568)
         self.preview_drawn = False
         
     def gen_processing_bar(self):
@@ -124,8 +125,8 @@ class Process(State):
             """
 
             # Thumbnail size of pictures
-            outer_border = 50
-            inner_border = 20
+            outer_border = 100
+            inner_border = 10
             thumb_box = ( int( self.image_size[0] / 2 ) ,
                           int( self.image_size[1] / 2 ) )
             thumb_size = ( thumb_box[0] - outer_border - inner_border ,
@@ -138,28 +139,28 @@ class Process(State):
 
             # Image 0
             img = Image.open(self.photo_set[0])
-            img.thumbnail(thumb_size)
+            img.thumbnail(thumb_size,Image.ANTIALIAS)
             offset = ( thumb_box[0] - inner_border - img.size[0] ,
                        thumb_box[1] - inner_border - img.size[1] )
             output_image.paste(img, offset)
 
             # Image 1
             img = Image.open(self.photo_set[1])
-            img.thumbnail(thumb_size)
+            img.thumbnail(thumb_size,Image.ANTIALIAS)
             offset = ( thumb_box[0] + inner_border,
                        thumb_box[1] - inner_border - img.size[1] )
             output_image.paste(img, offset)
 
             # Image 2
             img = Image.open(self.photo_set[2])
-            img.thumbnail(thumb_size)
+            img.thumbnail(thumb_size,Image.ANTIALIAS)
             offset = ( thumb_box[0] - inner_border - img.size[0] ,
                        thumb_box[1] + inner_border )
             output_image.paste(img, offset)
 
             # Image 3
             img = Image.open(self.photo_set[3])
-            img.thumbnail(thumb_size)
+            img.thumbnail(thumb_size,Image.ANTIALIAS)
             offset = ( thumb_box[0] + inner_border ,
                        thumb_box[1] + inner_border )
             output_image.paste(img, offset)
@@ -181,7 +182,8 @@ class Process(State):
             
             self.gameDisplay.fill((200,200,200))
             img = pygame.image.load(self.final_photos[0])
-            ratio = 0.55
+            ratio = 0.275
+            #ratio = 0.55
             shrink = ( int(img.get_size()[0]*ratio), int(img.get_size()[1]*ratio))
             img = pygame.transform.scale(img, shrink) 
             img_pos = ((self.disp_w-img.get_size()[0])/2+180,65)

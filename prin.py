@@ -11,6 +11,8 @@ from time import sleep
 
 import math
 from PIL import Image
+from PIL import ImageFont
+from PIL import ImageDraw
 
 from state import *
 
@@ -56,8 +58,19 @@ class Prin(State):
         self.print_bar_img_pos = (1200,((self.disp_h-film_h)/2)+55)
     
     def print_file(self, printer, f, l, ret_q ):
-        sleep(10)
-        ret_q.put("Nothing Yet")
+        imgTxt = '/tmp/imglink.jpg'
+        img = Image.open(f)
+        w, h = img.size
+        size = 60
+
+        f = ImageFont.truetype("arial.ttf", size)
+        dr = ImageDraw.Draw(img)
+        dr.text((100, h-95),l,(0,0,0),font=f)
+        img.save(imgTxt)
+
+        printer.print_image(imgTxt)
+        sleep(25)
+        ret_q.put("Done")
         return
     
     def start(self, photo_set, link ):

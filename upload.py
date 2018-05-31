@@ -240,7 +240,7 @@ class Upload(State):
         elif item['cmd'] == 'UPLOADINFO':
             for info in self.upload_info:
                 self.ani_q_img_push( info, self.upload_info_pos , 0.4, True, forceSurfaceAlpha=False)
-                self.ani_q_pause_push(3)
+                self.ani_q_pause_push(5)
             
             self.ani_q_cmd_push("UPLOADINFO")
 

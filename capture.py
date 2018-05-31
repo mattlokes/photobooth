@@ -123,7 +123,7 @@ class Capture(State):
                                      0.5, True, 
                                      tilt=self.instr_bars_ang[idx],
                                      forceSurfaceAlpha=False )
-                self.ani_q_pause_push(4)
+                self.ani_q_pause_push(2)
             self.ani_q_cmd_push("CAPTURE_START")
         
         elif item['cmd'] == 'CAPTURE_START':

@@ -235,7 +235,7 @@ def main():
             #Update Photo Upload/ Printer Enable Switch State
             # TODO
 
-            prin.start( final_photos, printer_en )
+            prin.start( final_photos, final_link )
             pygame.display.update()
             state = "PRINT"
         
