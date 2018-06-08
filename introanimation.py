@@ -73,7 +73,7 @@ class IntroAnimation:
                             'alpha' : 0, 
                             'xy' : rand_xy, 
                             'tilt': rand_tilt,
-                            'scale': 0.3})
+                            'scale': 0.15})
 
     def __ani_q_pop(self):
         if len(self.ani_q) > 0:

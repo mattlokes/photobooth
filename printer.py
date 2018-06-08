@@ -1,4 +1,7 @@
 import getpass
+import re
+import subprocess
+from fuzzywuzzy import fuzz
 
 cups_fail = False
 try:
@@ -18,17 +21,40 @@ class PrinterModule:
         self.printer_name = self.printers_list.keys()[0]
         print "Printer: {0}".format(self.printer_name)
         cups.setUser(getpass.getuser())
+        lsusb_name = self.printer_connected()
+        print "{0} Found to be Connected!".format(lsusb_name)
 
     def set_cups_user ( self, user ):
         cups.setUser(user)
 
     def print_image( self, path ):
-        #Print Command for 4x6 media
-        #return self.conn.printFile(self.printer_name, path, "print_photo_booth", {'media':'???'})
-        #Print Command for 6x8 media
-        #return self.conn.printFile(self.printer_name, path, "print_photo_booth", {'media':'w432h612'})
-        #Print Command None
-        return None
+        if self.printer_connected() != None :
+            #Print Command for 4x6 media
+            #return self.conn.printFile(self.printer_name, path, "print_photo_booth", {'media':'???'})
+            #Print Command for 6x8 media
+            return self.conn.printFile(self.printer_name, path, "print_photo_booth", {'media':'w432h612'})
+        else:
+            #Print Command None
+            return None
 
     def get_attributes( self ):
         return self.conn.getPrinterAttributes( self.printer_name )
+    
+    def printer_connected( self ):
+        device_re = re.compile("Bus\s+(?P<bus>\d+)\s+Device\s+(?P<device>\d+).+ID\s(?P<id>\w+:\w+)\s(?P<tag>.+)$", re.I)
+        df = subprocess.check_output("lsusb")
+        devices = []
+        for i in df.split('\n'):
+            if i:
+                info = device_re.match(i)
+                if info:
+                    dinfo = info.groupdict()
+                    dinfo['device'] = '/dev/bus/usb/%s/%s' % (dinfo.pop('bus'), dinfo.pop('device'))
+                    devices.append(dinfo)
+        for d in devices:
+            if fuzz.partial_ratio(d['tag'].replace("_"," ").upper(), 
+                                  self.printer_name.replace("_"," ").upper()) > 60:
+                return d['tag']
+        return None
+    
+

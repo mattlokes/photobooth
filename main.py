@@ -122,6 +122,7 @@ def main():
 
 
     state = "INTRO_S"
+    retake = False
     while not state == "END":
       
         event_list = pygame.event.get()
@@ -136,6 +137,7 @@ def main():
 
         ### INTRO ANIMATION STATES ###
         if state == "INTRO_S":
+            retake = False
             final_photos = []
             final_link = ""
             final_uploaded = upload_en
@@ -157,7 +159,7 @@ def main():
 
         ### CAPTURE STATES ###
         if state == "CAPTURE_S":
-            capture.start()
+            capture.start(retake)
             pygame.display.update()
             state = "CAPTURE"
 
@@ -199,6 +201,7 @@ def main():
 
                     elif red_press( event ): #Retake
                         process.reset()
+                        retake = True
                         state = "CAPTURE_S"
             process.next()
             pygame.display.update()
@@ -275,7 +278,7 @@ image_size = (2352, 1568)
 thumb_size = (1176, 784)
 
 # Image basename
-picture_basename = datetime.now().strftime("%Y-%m-%d/pic")
+picture_basename = datetime.now().strftime("/media/pi/PHOTOBOOTH/craig_and_lucy_2018/%Y-%m-%d/pic")
 
 # GPIO channels
 gpio_green_button = 6

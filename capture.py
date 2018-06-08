@@ -7,6 +7,7 @@ import os
 from datetime import datetime
 from glob import glob
 from sys import exit
+import sys
 
 from state import *
 
@@ -138,7 +139,14 @@ class Capture(State):
             self.next()
        
         elif item['cmd'] == 'CAPTURE':
-            snap = self.cam.take_picture("/tmp/photob_%02d.jpg" % self.cap_cnt)
+            try:
+                snap = self.cam.take_picture("/tmp/photob_%02d.jpg" % self.cap_cnt)
+            except:
+                print "ERROR CAMERA BUSY, TRY TAKING LENS CAP OFF!?"
+                self.stop()
+                print "Restarting...."
+                os.execv(sys.executable, ['python'] + sys.argv)
+
             self.cap_path[self.cap_cnt] = snap
                 
             snap_obj = pygame.image.load(snap)
@@ -158,12 +166,15 @@ class Capture(State):
                 self.ani_q_cmd_push("COMPLETE")
 
 
-    def start(self):
+    def start(self, retake=False):
         self.gpio.set('green_led', 0)
         self.gpio.set('red_led', 0)
         self.gameDisplay.fill((200,200,200))
 
-        self.ani_q_cmd_push("INSTRUCT")
+        if retake:
+            self.ani_q_cmd_push("CAPTURE_START")
+        else:
+            self.ani_q_cmd_push("INSTRUCT")
         self.next()
 
     def next(self):
