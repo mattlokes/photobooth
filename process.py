@@ -143,6 +143,11 @@ class Process(State):
             offset = ( thumb_box[0] - inner_border - img.size[0] ,
                        thumb_box[1] - inner_border - img.size[1] )
             output_image.paste(img, offset)
+            
+            img = Image.open(self.photo_set[0])
+            img.thumbnail( self.image_size, Image.ANTIALIAS )
+            img.save(self.photo_set[0])
+
 
             # Image 1
             img = Image.open(self.photo_set[1])
@@ -150,6 +155,10 @@ class Process(State):
             offset = ( thumb_box[0] + inner_border,
                        thumb_box[1] - inner_border - img.size[1] )
             output_image.paste(img, offset)
+            
+            img = Image.open(self.photo_set[1])
+            img.thumbnail( self.image_size, Image.ANTIALIAS )
+            img.save(self.photo_set[1])
 
             # Image 2
             img = Image.open(self.photo_set[2])
@@ -157,6 +166,10 @@ class Process(State):
             offset = ( thumb_box[0] - inner_border - img.size[0] ,
                        thumb_box[1] + inner_border )
             output_image.paste(img, offset)
+            
+            img = Image.open(self.photo_set[2])
+            img.thumbnail( self.image_size, Image.ANTIALIAS )
+            img.save(self.photo_set[2])
 
             # Image 3
             img = Image.open(self.photo_set[3])
@@ -164,11 +177,16 @@ class Process(State):
             offset = ( thumb_box[0] + inner_border ,
                        thumb_box[1] + inner_border )
             output_image.paste(img, offset)
+            
+            img = Image.open(self.photo_set[3])
+            img.thumbnail( self.image_size, Image.ANTIALIAS )
+            img.save(self.photo_set[3])
 
             # Save assembled image
             output_filename = self.pictures.get_next()
             output_image.save(output_filename, "JPEG")
             self.final_photos= [output_filename]
+
             #Save files that make up assembled
             for i,photo in enumerate(self.photo_set):
                 newname = output_filename.replace(".","."+str(i)+".")
