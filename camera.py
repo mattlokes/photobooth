@@ -2,6 +2,7 @@
 # Created by br@re-web.eu, 2015
 
 import subprocess
+from logger import *
 
 cv_enabled = False
 gphoto2cffi_enabled = False
@@ -11,7 +12,7 @@ fake_enabled = False
 try:
     import cv2 as cv
     cv_enabled = True
-    print('OpenCV available')
+    #print('OpenCV available')
 except ImportError:
     pass
 
@@ -19,7 +20,7 @@ try:
     import gphoto2cffi as gp
     gpExcept = gp.errors.GPhoto2Error
     gphoto2cffi_enabled = True
-    print('Gphoto2cffi available')
+    #print('Gphoto2cffi available')
 except ImportError:
     pass
 
@@ -28,7 +29,7 @@ if not gphoto2cffi_enabled:
         import piggyphoto as gp
         gpExcept = gp.libgphoto2error
         piggyphoto_enabled = True
-        print('Piggyphoto available')
+        #print('Piggyphoto available')
     except ImportError:
         pass
 
@@ -80,12 +81,10 @@ class Camera_gPhoto:
             else:
                 print(self.call_gphoto("-a", "/dev/null"))
         except CameraException as e:
-            print('Warning: Listing camera capabilities failed (' + e.message + ')')
-            print "Enabing Fake Camera Mode..."
+            Logger.warning(__name__,"Camera Error, Proceed with Fake Camera Mode...")
             fake_enabled = True
         except gpExcept as e:
-            print('Warning: Listing camera capabilities failed (' + e.message + ')')
-            print "Enabing Fake Camera Mode..."
+            Logger.warning(__name__,"Camera Error, Proceed with Fake Camera Mode...")
             fake_enabled = True
 
     def call_gphoto(self, action, filename):

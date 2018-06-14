@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from logger import *
 
 try:
     import RPi.GPIO as GPIO
@@ -13,11 +14,14 @@ class Gpio:
             self.ins = {}
 
             # Display initial information
-            print("Your Raspberry Pi is board revision " + str(GPIO.RPI_INFO['P1_REVISION']))
-            print("RPi.GPIO version is " + str(GPIO.VERSION))
+            Logger.info(__name__,"Your Raspberry Pi is board revision " + str(GPIO.RPI_INFO['P1_REVISION']))
+            Logger.info(__name__,"RPi.GPIO version is " + str(GPIO.VERSION))
 
             # Choose BCM numbering system
             GPIO.setmode(GPIO.BCM)
+
+            # Disable warnings
+            GPIO.setwarnings(False)
 
             # Setup the input channels
             for idx,input_channel in enumerate(input_channels):
@@ -36,7 +40,7 @@ class Gpio:
                     self.outs[output_channel] = { 'state':0 }
             
         else:
-            print("Warning: RPi.GPIO could not be loaded. GPIO disabled.")
+            Logger.warning(__name__,"RPi.GPIO could not be loaded. GPIO disabled.")
 
     def teardown(self):
         if gpio_enabled:
@@ -60,14 +64,14 @@ class Gpio:
     def set(self, alias, value):
         chan = self.unalias(alias)
         if chan == None:
-            print "call to set unaliased output \""+alias+"\""
+            Logger.warning(__name__,"call to set unaliased output \""+alias+"\"")
         else:
             self.set_output(chan, value)
    
     def toggle(self, alias):
         chan = self.unalias(alias)
         if chan == None:
-            print "call to toggle unaliased output \""+alias+"\""
+            Logger.warning(__name__,"call to toggle unaliased output \""+alias+"\"")
         else:
             self.toggle.output(chan)
 

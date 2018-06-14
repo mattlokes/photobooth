@@ -3,11 +3,13 @@ import re
 import subprocess
 from fuzzywuzzy import fuzz
 
+from logger import *
+
 cups_fail = False
 try:
    import cups
 except:
-    print "Looks like you need pycups to use this printer"
+    Logger.error(__name__,"Looks like you need pycups to use this printer")
     cups_fail = True
 
 class PrinterModule:
@@ -19,10 +21,13 @@ class PrinterModule:
         self.conn = cups.Connection()
         self.printers_list = self.conn.getPrinters()
         self.printer_name = self.printers_list.keys()[0]
-        print "Printer: {0}".format(self.printer_name)
+        Logger.info(__name__, "CUPS Printer - {0}".format(self.printer_name))
         cups.setUser(getpass.getuser())
         lsusb_name = self.printer_connected()
-        print "{0} Found to be Connected!".format(lsusb_name)
+        if lsusb_name:
+            Logger.success(__name__, "USB Printer - {0}".format(lsusb_name))
+        else:
+            Logger.warning(__name__, "USB Printer - {0}".format(lsusb_name))
 
     def set_cups_user ( self, user ):
         cups.setUser(user)

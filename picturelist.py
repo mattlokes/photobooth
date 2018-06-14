@@ -7,6 +7,8 @@ from sys import exit
 from time import sleep, clock
 from time import gmtime, strftime
 
+from logger import *
+
 class PictureList:
     """A simple helper class.
 
@@ -47,8 +49,8 @@ class PictureList:
             self.counter_last = self.counter - 1
 
         # Print initial infos
-        print("Info: Number of last existing file: " + str(self.counter))
-        print("Info: Saving assembled pictures as: " + self.basename + "XXXXX.jpg")
+        Logger.info(__name__, "Number of last existing file - " + str(self.counter))
+        Logger.info(__name__, "Dir - " + self.basename[:-3])
 
     def get(self, count):
         return self.basename + str(count).zfill(self.count_width) + self.suffix

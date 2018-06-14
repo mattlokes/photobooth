@@ -19,6 +19,8 @@ import qrcode
 from multiprocessing import Process as Thread
 from multiprocessing import Queue
 
+from logger import *
+
 
 class Upload(State):
 
@@ -31,11 +33,11 @@ class Upload(State):
         self.gen_upload_menu()
         self.gen_upload_info()
 
-        print "pCloud Login.."
+        Logger.info(__name__,"Connecting to pCloud...")
         self.pcloud_login()
-        print "...Success"
+        Logger.success(__name__,"pCloud Connection Success")
         self.pcloud_upload_folder = self.pcloud_get_uploadfolderid(self.pcloud_path)
-        print "pcloud folderid: {0}".format(self.pcloud_upload_folder)
+        Logger.info(__name__,"pCloud Folder ID - {0}".format(self.pcloud_upload_folder))
         
     def pcloud_login( self ):
         f = open(self.pcloud_pass_file, 'r')
@@ -70,7 +72,7 @@ class Upload(State):
                     slinks.append(sl)
                     break
                 except:
-                    print "pCloud Error, retrying login"
+                    Logging.warning(__name__,"pCloud Error, retrying connection")
                     self.pcloud_login()
                     retrycnt -= 1
             if retrycnt == 0: #Failed Retries
@@ -220,7 +222,7 @@ class Upload(State):
                 self.ani_q_cmd_push("UPLOADWAIT")
             else:
                 self.upload_link = self.pcloud_upload_q.get()
-                print "pCloud Upload Complete .. {0}".format(self.upload_link)
+                Logger.info(__name__,"pCloud Upload Complete - {0}".format(self.upload_link))
                 self.ani_q_cmd_push("UPLOADQR")
 
         elif item['cmd'] == 'UPLOADQR':

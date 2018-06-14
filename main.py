@@ -22,27 +22,29 @@ from process import *
 from upload import *
 from prin import *
 
+from logger import *
+
 def wait_for_internet_connection():
-    print "Testing Internet Connection..."
+    Logger.info(__name__, "Testing Internet Connection...")
     for _ in range(120):
         try:
             rsp = urllib2.urlopen('http://google.com',timeout=1)
-            print "Internet Connection Sucess!"
+            Logger.success(__name__,"Internet Connection Success!")
             return True
         except urllib2.URLError:
             pass
-    print "Internet Connection Failed!"
+    Logger.warning(__name__,"Internet Connection Failed!")
     return False
 
 def sig_green_handler(signum, frame):
     stim = "GPIO" if frame == None else "Signal"
-    print 'Green handler called from ' + stim
+    Logger.debug(__name__,'Green handler called from ' + stim)
     green_event = pygame.event.Event( pygame.USEREVENT, sig='green')
     pygame.event.post(green_event)
 
 def sig_red_handler(signum, frame):
     stim = "GPIO" if frame == None else "Signal"
-    print 'Red handler called from ' + stim
+    Logger.debug(__name__,'Red handler called from ' + stim)
     red_event = pygame.event.Event( pygame.USEREVENT+1, sig='red')
     pygame.event.post(red_event)
 
@@ -52,7 +54,7 @@ def handle_gpio( channel ):
     elif channel == gpio_red_button:
         sig_red_handler(None, None)
     else:
-        print "Warning, dodgy GPIO Seen!"
+        Logger.warning(__name__,"dodgy GPIO Seen!")
 
 
 def green_press ( e ):
@@ -88,7 +90,7 @@ def reset_combo( el ):
 def main():
     global printer_en
     global upload_en
-
+    
     ### Initialisation ###
     pygame.init()
     gameDisplay = pygame.display.set_mode((disp_w,disp_h),pygame.FULLSCREEN)
@@ -128,7 +130,7 @@ def main():
         event_list = pygame.event.get()
 
         if reset_combo(event_list):
-            print "Restarting..."
+            Logger.warning(__name__,"Restarting...")
             intro_ani.stop()
             capture.stop()
             process.stop()
