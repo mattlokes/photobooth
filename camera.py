@@ -3,6 +3,7 @@
 
 import subprocess
 from logger import *
+import pygame
 
 cv_enabled = False
 gphoto2cffi_enabled = False
@@ -32,6 +33,8 @@ if not gphoto2cffi_enabled:
         #print('Piggyphoto available')
     except ImportError:
         pass
+
+import io
 
 class CameraException(Exception):
     """Custom exception class to handle camera class errors"""
@@ -75,6 +78,7 @@ class Camera_gPhoto:
         try:
             if gphoto2cffi_enabled:
                 self.cap = gp.Camera()
+                Logger.success(__name__,"{0} Connected".format(self.cap.model_name) )
             elif piggyphoto_enabled:
                 self.cap = gp.camera()
                 print(self.cap.abilities)
@@ -115,6 +119,13 @@ class Camera_gPhoto:
             self.cap.capture_preview(filename)	
         else:
             raise CameraException("No preview supported!")
+
+    def get_fast_preview( self, surf):
+        #rather than saving to JPEG then reloading, return pygame surface
+        jpeg = self.cap.get_preview() #get jpeg string
+        surf = pygame.image.load(io.BytesIO(jpeg)) #pygame decodes jpeg to surface
+        return surf
+
 
     def take_picture(self, filename="/tmp/picture.jpg"):
         if fake_enabled:

@@ -117,7 +117,7 @@ def main():
 
     
     intro_ani = IntroAnimation( gameDisplay, disp_w, disp_h, fps, gpio, pictures )
-    capture   = Capture ( gameDisplay, disp_w, disp_h, fps, gpio, camera )
+    capture   = Capture ( gameDisplay, disp_w, disp_h, 15, gpio, camera )
     process  = Process( gameDisplay, disp_w, disp_h, fps, gpio, pictures )
     upload = Upload( gameDisplay, disp_w, disp_h,fps, gpio)
     prin  = Prin( gameDisplay, disp_w, disp_h,fps, gpio, printer )
@@ -261,7 +261,10 @@ def main():
             pictures.log_add( final_photos[0], final_link, final_uploaded, final_printed )
             state = "INTRO_S"
        
-        clock.tick(fps)
+        if "CAPTURE" in state:
+            clock.tick(15)
+        else:
+            clock.tick(fps)
     
     pygame.quit()
     quit()

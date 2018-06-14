@@ -1,5 +1,5 @@
 import pygame
-import pygame.camera
+#import pygame.camera
 import random
 import operator
 import os
@@ -20,7 +20,7 @@ from PIL import Image
 from extratransforms import *
 
 
-pygame.camera.init()
+#pygame.camera.init()
 
 class Capture(State):
 
@@ -39,16 +39,10 @@ class Capture(State):
         self.gen_instr_bars()
 
         #Preview Camera
-        self.preview_size = (1280,720)
+        #self.preview_size = (1280,720)
+        self.preview_size = (928,616)
         self.prev_c = (self.disp_w/2, self.preview_size[1]/2)
         
-
-        self.clist = pygame.camera.list_cameras()
-        if not self.clist:
-            raise ValueError("Sorry, no preview cameras detected.")
-        self.precam = pygame.camera.Camera(self.clist[0], self.preview_size)
-        self.precam.start()
-
         self.snapshot = pygame.surface.Surface(self.preview_size, 0, self.gameDisplay)
         
         #Capture State
@@ -181,12 +175,9 @@ class Capture(State):
 
         #WEBCAM UPDATE
         if self.preview_enabled:
-            if self.precam.query_image():
-                self.snapshot = self.precam.get_image(self.snapshot)
-                self.snapshot = pygame.transform.flip( self.snapshot, False, True)
-                # blit it to the display surface.  simple!
-                self.gameDisplay.blit(self.snapshot, (int((self.disp_w - self.preview_size[0])/2), 0))
-        
+            self.snapshot = self.cam.get_fast_preview(self.snapshot)
+            self.gameDisplay.blit(self.snapshot, (int((self.disp_w - self.preview_size[0])/2), 30))
+
         #Special case reverse overlay and animation draw
         State.ovr_draw(self)
         State.ani_draw(self)
