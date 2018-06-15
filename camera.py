@@ -126,6 +126,8 @@ class Camera_gPhoto:
         surf = pygame.image.load(io.BytesIO(jpeg)) #pygame decodes jpeg to surface
         return surf
 
+    def end_fast_preview( self ):
+        self.cap.exit()
 
     def take_picture(self, filename="/tmp/picture.jpg"):
         if fake_enabled:

@@ -19,14 +19,11 @@ from PIL import Image
 
 from extratransforms import *
 
-
-#pygame.camera.init()
-
 class Capture(State):
 
     def __init__(self, gd, w, h, fps, gpio, cam):
-        State.__init__(self, gd, w, h, fps, gpio)
         self.cam = cam
+        State.__init__(self, gd, w, h, fps, gpio)
 
         #Generate ani points
         self.cap_num = 4
@@ -187,6 +184,7 @@ class Capture(State):
         self.cap_cnt = 0
         self.cap_thumbs = []
         self.preview_enabled = False
+        self.cam.end_fast_preview()
     
     def stop(self):
         self.precam.stop()
