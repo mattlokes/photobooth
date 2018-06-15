@@ -27,7 +27,9 @@ class Upload(State):
     def __init__(self, gd, w, h, fps, gpio):
         State.__init__(self, gd, w, h, fps, gpio)
         self.pcloud_pass_file = ".pcloud_pass"
-        self.pcloud_path = "/photobooth/craig_lucy_wedding_2018"
+        self.pcloud_path = "/Public Folder/photobooth/craig_lucy_wedding_2018"
+        self.pcloud_public_link = "https://filedn.com/lON9Nk3nzUs4KheBfvjzRuF"
+        self.public_link = self.pcloud_path.replace("/Public Folder", self.pcloud_public_link)
 
         self.gen_upload_bar()
         self.gen_upload_menu()
@@ -67,12 +69,12 @@ class Upload(State):
             while( retrycnt > 0):
                 try:
                     resp = pc.uploadfile(files=[i],folderid=fid)
-                    ll = pc.getfilepublink(fileid=resp['fileids'][0])['link']
+                    ll = self.public_link +'/' + str(resp['metadata'][0]['name'])
                     sl = tinyurl.shorten(ll,"")
                     slinks.append(sl)
                     break
                 except:
-                    Logging.warning(__name__,"pCloud Error, retrying connection")
+                    Logger.warning(__name__,"pCloud Error, retrying connection")
                     self.pcloud_login()
                     retrycnt -= 1
             if retrycnt == 0: #Failed Retries

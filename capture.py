@@ -187,6 +187,6 @@ class Capture(State):
         self.cam.end_fast_preview()
     
     def stop(self):
-        self.precam.stop()
         self.gpio.set('green_led', 0)
         self.gpio.set('red_led', 0)
+        self.cam.end_fast_preview()
