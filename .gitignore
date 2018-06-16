@@ -3,5 +3,5 @@
 *-*-*
 *.jpg
 *.png
-*/venv/*
-venv/*
+*.log
+*venv*
