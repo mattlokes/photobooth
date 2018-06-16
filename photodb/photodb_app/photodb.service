@@ -1,0 +1,12 @@
+[Unit]
+Description=photodb
+After=network.target
+
+[Service]
+User=www-data
+Restart=on-failure
+WorkingDirectory=<PATH>/photodb
+ExecStart=<PATH>/photodb/venv/bin/gunicorn -c <PATH>/photodb/gunicorn.conf -b 0.0.0.0:17120 main:app
+
+[Install]
+WantedBy=multi-user.target
