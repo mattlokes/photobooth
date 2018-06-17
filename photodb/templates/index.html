@@ -1,0 +1,102 @@
+<html>
+  <head>
+    <title>{{ event_name }} </title>
+    <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.3.5/jquery.fancybox.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.3.5/jquery.fancybox.min.js"></script>
+    <link rel="stylesheet" href="http://labs.justabitmatt.com/photodb/gallery/css/gallery.css" />
+
+  </head>
+  <body>
+
+    <div class="navbar">
+      <div class="title">
+        <h1> {{ event_name }} </h1>
+      </div>
+    </div>
+
+    <div class ="main">
+      <div class="imglist" style="max-width: 100%;">
+
+      {% for i in grid_image[::-1] %}
+        <a href="{{ i[1] }}" data-fancybox="{{ i[0].split(".")[0] }}" data-primary="{{ i[0].split(".")[0] }}">
+          <div class="imgsep">
+            <img src="{{ i[1] }}" style="max-width:800px;" />
+          </div>
+        </a> 
+      {% endfor %}
+      
+      {% for i in hidden_image %}
+        <a href="{{ i[1] }}" data-fancybox="{{ i[0].split(".")[0] }}">
+        </a> 
+      {% endfor %}
+   
+      </div>
+    </div>
+  
+  <div class="footer">
+    <hr>
+    <p class="footertxt">Any Issues? Email: <a href="mailto:matlokes@gmail.com" class="footertxt" >matlokes@gmail.com</a>.</p>
+  </div>
+
+    <script>
+       $("[data-fancybox]").fancybox({
+                               buttons: [
+                                         "download",
+                                         "close"
+                                         ],
+                               btnTpl: {
+                                       download:
+                                           '<a download data-fancybox-download class="fancybox-button fancybox-button--download" style="width:100px;height:100px;" title="{{DOWNLOAD}}" href="javascript:;">' +
+                                           '<svg viewBox="0 0 40 40">' +
+                                           '<path d="M13,16 L20,23 L27,16 M20,7 L20,23 M10,24 L10,28 L30,28 L30,24" />' +
+                                           "</svg>" +
+                                           "</a>",
+                               
+                               
+                                       close:
+                                           '<button data-fancybox-close class="fancybox-button fancybox-button--close" style="width:100px;height:100px;" title="{{CLOSE}}">' +
+                                           '<svg viewBox="0 0 40 40">' +
+                                           '<path d="M10,10 L30,30 M30,10 L10,30" />' +
+                                           "</svg>" +
+                                           "</button>",
+                               
+                                       // Arrows
+                                       arrowLeft:
+                                           '<a data-fancybox-prev class="fancybox-button fancybox-button--arrow_left" style="width:100px;height:100px;" title="{{PREV}}" href="javascript:;">' +
+                                           '<svg viewBox="0 0 40 40">' +
+                                           '<path d="M18,12 L10,20 L18,28 M10,20 L30,20"></path>' +
+                                           "</svg>" +
+                                           "</a>",
+                               
+                                       arrowRight:
+                                           '<a data-fancybox-next class="fancybox-button fancybox-button--arrow_right" style="width:100px;height:100px;" title="{{NEXT}}" href="javascript:;">' +
+                                           '<svg viewBox="0 0 40 40">' +
+                                           '<path d="M10,20 L30,20 M22,12 L30,20 L22,28"></path>' +
+                                           "</svg>" +
+                                           "</a>"
+                                   },
+                                   clickSlide: "close",
+                                   clickOutside: "close",
+                                   dblclickOutside: "close",
+                                   mobile: {
+                                        clickSlide: "close",
+                                        clickOutside: "close",
+                                        dblclickOutside: "close",
+                                   },
+                            });
+    </script>
+
+    {% if pic != None %}
+    <script>     
+      $(document).ready(function() {   
+          $('a[data-primary="{{ pic }}"]').trigger('click');
+      });
+    </script>
+    {% endif %}
+
+
+
+  </body>
+</html>

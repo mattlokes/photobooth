@@ -15,6 +15,7 @@ from state import *
 
 from pcloud import PyCloud
 import requests
+import tinyurl
 import qrcode
 from multiprocessing import Process as Thread
 from multiprocessing import Queue
@@ -94,12 +95,13 @@ class Upload(State):
         primary = 1 if photo_primary else 0
         for _ in range(3):
             try:
-                r = requests.post("http://labs.justabitmatt.com/rest/photodb/{0}/{1}".format(self.event_name, primary), json={'photo_name': photo_name, 'photo_link': photo_link})
+                r = requests.post("http://labs.justabitmatt.com/photodb/rest/{0}/{1}".format(self.event_name, primary), json={'photo_name': photo_name, 'photo_link': photo_link})
                 
                 if r.status_code != 200:
                     raise Exception("photodb POST gave respose code {0}".format(r.status_code))
-
-                return r.json()['slink']
+                
+                link = "http://labs.justabitmatt.com/photodb/gallery/{0}/{1}".format( self.event_name, photo_name.split(".")[0] )
+                return tinyurl.shorten(link,"")
             except:
                 Logger.warning(__name__,"photodb register error {0}, retrying..".format(r.status_code))
         return None

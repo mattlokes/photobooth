@@ -1,0 +1,63 @@
+
+
+
+@font-face{
+   font-family: Springtime;
+   src: url('/photodb/gallery/fonts/springtime_in_april.ttf');
+}
+
+body {
+    background-color: rgb(200,200,200);
+}
+
+/* The navigation bar */
+.navbar {
+    overflow: hidden;
+    background-color: rgb(40,40,40);
+    position: fixed; /* Set the navbar to fixed position */
+    top: 0; /* Position the navbar at the top of the page */
+    left: 0;
+    right: 0;
+    width: 100%; /* Full width */
+    height: 200px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.navbar .title {
+    left: 15px;
+    margin-left: 50px;
+}
+
+.navbar .title h1 {
+    font-family: Springtime;
+    font-size: 80px;
+    color: rgb(255,255,255);
+}
+
+/* Main content */
+.main {
+    margin-top: 200px; /* Add a top margin to avoid content overlay */
+}
+
+/*Image Grid */
+.main .imglist {
+    max-width: 100%;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.imgsep {
+    padding-top:20px;
+}
+
+.imgsep img {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+/* Footer */
+
+.footertxt {
+    font-family: Springtime;
+    font-size: 32px;
+    color: rgb(40,40,40);
+}
