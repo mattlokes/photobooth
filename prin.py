@@ -59,18 +59,19 @@ class Prin(State):
         self.print_bar_img_pos = (1200,((self.disp_h-film_h)/2)+55)
     
     def print_file(self, printer, f, l, ret_q ):
+        tmp_img = '/tmp/print_img.jpg'
+        img = Image.open(f)
+        img.thumbnail(( 2076,1384), Image.ANTIALIAS) #shrink to printer resolution
+
         if self.cfg.get("printer__link_embed"):
-            tmp_img = '/tmp/imglink.jpg'
-            img = Image.open(f)
             font = ImageFont.truetype(self.cfg.get("printer__link_font"), 
                                       self.cfg.get("printer__link_size"))
             dr = ImageDraw.Draw(img)
             dr.text( ( self.cfg.get("printer__link_pos_x"), self.cfg.get("printer__link_pos_y")),l,
                      (0,0,0),font=font)
-            img.save(tmp_img)
-            fi = tmp_img
-        else:
-            fi = f
+            
+        img.save(tmp_img)
+        fi = tmp_img
 
         for _ in range(self.cfg.get("printer__copies")):
             printer.print_image(fi)

@@ -91,106 +91,121 @@ class Process(State):
 
     def state_cmd(self, item):
         if item['cmd'] == 'PROCESS':
-            """Assembles four pictures into a 2x2 grid
-
-            It assumes, all original pictures have the same aspect ratio as
-            the resulting image.
-
-            For the thumbnail sizes we have:
-            h = (H - 2 * a - 2 * b) / 2
-            w = (W - 2 * a - 2 * b) / 2
-
-                                        W
-                   |---------------------------------------|
-
-              ---  +---+-------------+---+-------------+---+  ---
-               |   |                                       |   |  a
-               |   |   +-------------+   +-------------+   |  ---
-               |   |   |             |   |             |   |   |
-               |   |   |      0      |   |      1      |   |   |  h
-               |   |   |             |   |             |   |   |
-               |   |   +-------------+   +-------------+   |  ---
-             H |   |                                       |   |  2*b
-               |   |   +-------------+   +-------------+   |  ---
-               |   |   |             |   |             |   |   |
-               |   |   |      2      |   |      3      |   |   |  h
-               |   |   |             |   |             |   |   |
-               |   |   +-------------+   +-------------+   |  ---
-               |   |                                       |   |  a
-              ---  +---+-------------+---+-------------+---+  ---
-
-                   |---|-------------|---|-------------|---|
-                     a        w       2*b       w        a
-            """
-
-            # Thumbnail size of pictures
-            outer_border = 100
-            inner_border = 10
-            thumb_box = ( int( self.image_size[0] / 2 ) ,
-                          int( self.image_size[1] / 2 ) )
-            thumb_size = ( thumb_box[0] - outer_border - inner_border ,
-                           thumb_box[1] - outer_border - inner_border )
-
-            # Create output image with white background
-            output_image = Image.new('RGB', self.image_size, (255, 255, 255))
-            #Create Image With Template
-            #TODO TODO TODO
-
-            # Image 0
-            img = Image.open(self.photo_set[0])
-            img.thumbnail(thumb_size,Image.ANTIALIAS)
-            offset = ( thumb_box[0] - inner_border - img.size[0] ,
-                       thumb_box[1] - inner_border - img.size[1] )
-            output_image.paste(img, offset)
             
-            img = Image.open(self.photo_set[0])
-            img.thumbnail( self.image_size, Image.ANTIALIAS )
-            img.save(self.photo_set[0])
-
-
-            # Image 1
-            img = Image.open(self.photo_set[1])
-            img.thumbnail(thumb_size,Image.ANTIALIAS)
-            offset = ( thumb_box[0] + inner_border,
-                       thumb_box[1] - inner_border - img.size[1] )
-            output_image.paste(img, offset)
+            output_filename = self.pictures.get_next()
+            offset =[]
+            photos = []
+            if self.cfg.get("image__format") == "fancy":
+                
+                #Create Image With Template
+                if self.cfg.get("image__background"):
+                    output_image = Image.open(self.cfg.get("image__background"))
+                else:
+                    output_image = Image.new('RGB', self.image_size, (255, 255, 255))
             
-            img = Image.open(self.photo_set[1])
-            img.thumbnail( self.image_size, Image.ANTIALIAS )
-            img.save(self.photo_set[1])
+                dpi = float(self.image_size[0])/6
+                dpm = int(dpi/25.4)
 
-            # Image 2
-            img = Image.open(self.photo_set[2])
-            img.thumbnail(thumb_size,Image.ANTIALIAS)
-            offset = ( thumb_box[0] - inner_border - img.size[0] ,
-                       thumb_box[1] + inner_border )
-            output_image.paste(img, offset)
-            
-            img = Image.open(self.photo_set[2])
-            img.thumbnail( self.image_size, Image.ANTIALIAS )
-            img.save(self.photo_set[2])
+                lr_off = dpm*20
 
-            # Image 3
-            img = Image.open(self.photo_set[3])
-            img.thumbnail(thumb_size,Image.ANTIALIAS)
-            offset = ( thumb_box[0] + inner_border ,
-                       thumb_box[1] + inner_border )
-            output_image.paste(img, offset)
+                new_w = int( (self.image_size[0] - (2*lr_off)) / 2 )
+                new_h = int( float(new_w)/1.5 )
+
+                thumb_size = ( new_w, new_h )
+
+                v_space = (self.image_size[1] - (2*new_h))
+                top_off = int(0.33*v_space)
+                mid_off = int(0.16*v_space)
+                bot_off = int(0.5 *v_space)
+               
+                m = int(dpm)
+
+                offset.append( ( lr_off - m ,top_off ))
             
-            img = Image.open(self.photo_set[3])
-            img.thumbnail( self.image_size, Image.ANTIALIAS )
-            img.save(self.photo_set[3])
+                offset.append( ( lr_off + new_w +m, top_off ))
+                
+                offset.append( ( lr_off - m , top_off + new_h + mid_off ) )
+
+                offset.append( ( lr_off + new_w + m , top_off + new_h + mid_off ) )
+                
+                Logger.info(__name__, "fancy print thumb_size: {0}".format(thumb_size))
+                Logger.info(__name__, "fancy print thumb coords: {0}".format(offset))
+
+            else:
+                """Assembles four pictures into a 2x2 grid
+
+                It assumes, all original pictures have the same aspect ratio as
+                the resulting image.
+
+                For the thumbnail sizes we have:
+                h = (H - 2 * a - 2 * b) / 2
+                w = (W - 2 * a - 2 * b) / 2
+
+                                            W
+                       |---------------------------------------|
+
+                  ---  +---+-------------+---+-------------+---+  ---
+                   |   |                                       |   |  a
+                   |   |   +-------------+   +-------------+   |  ---
+                   |   |   |             |   |             |   |   |
+                   |   |   |      0      |   |      1      |   |   |  h
+                   |   |   |             |   |             |   |   |
+                   |   |   +-------------+   +-------------+   |  ---
+                 H |   |                                       |   |  2*b
+                   |   |   +-------------+   +-------------+   |  ---
+                   |   |   |             |   |             |   |   |
+                   |   |   |      2      |   |      3      |   |   |  h
+                   |   |   |             |   |             |   |   |
+                   |   |   +-------------+   +-------------+   |  ---
+                   |   |                                       |   |  a
+                  ---  +---+-------------+---+-------------+---+  ---
+
+                       |---|-------------|---|-------------|---|
+                         a        w       2*b       w        a
+                """
+                # Create output image with white background
+                output_image = Image.new('RGB', self.image_size, (255, 255, 255))
+            
+                # Thumbnail size of pictures
+                outer_border = 100
+                inner_border = 20
+                thumb_box = ( int( self.image_size[0] / 2 ) ,
+                              int( self.image_size[1] / 2 ) )
+            
+                thumb_size = ( thumb_box[0] - outer_border - inner_border ,
+                               thumb_box[1] - outer_border - inner_border )
+            
+                offset.append( ( thumb_box[0] - inner_border - img.size[0] ,
+                                 thumb_box[1] - inner_border - img.size[1] ))
+            
+                offset.append( ( thumb_box[0] + inner_border,
+                                 thumb_box[1] - inner_border - img.size[1] ))
+                
+                offset.append( ( thumb_box[0] - inner_border - img.size[0] ,
+                                 thumb_box[1] + inner_border ) )
+                
+                offset.append( ( thumb_box[0] + inner_border ,
+                                 thumb_box[1] + inner_border ) )
+
+            for i in range(4):
+                # Resize Image and Paste with offset
+                img = Image.open(self.photo_set[i])
+                img.thumbnail(thumb_size,Image.ANTIALIAS)
+                output_image.paste(img, offset[i])
+                
+                # Shrink Image and save to directory as well
+                img = Image.open(self.photo_set[i])
+                img.thumbnail( self.image_size, Image.ANTIALIAS )
+                img.save(self.photo_set[i])
+
+                newname = output_filename.replace(".","."+str(i)+".")
+                shutil.move( self.photo_set[i], newname )
+                photos.append(newname)
 
             # Save assembled image
-            output_filename = self.pictures.get_next()
             output_image.save(output_filename, "JPEG")
-            self.final_photos= [output_filename]
+            self.final_photos= [output_filename] + photos
 
-            #Save files that make up assembled
-            for i,photo in enumerate(self.photo_set):
-                newname = output_filename.replace(".","."+str(i)+".")
-                shutil.copy2( photo, newname )
-                self.final_photos.append(newname)
             self.ani_q_cmd_push("PROCESSPREVIEW")
 
         elif item['cmd'] == 'PROCESSPREVIEW':

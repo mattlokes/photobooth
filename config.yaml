@@ -5,6 +5,11 @@ camera:
     image_size_x: 4704
     image_size_y: 3136
 
+image:
+    format:     "fancy"
+    background: False
+    dpi:        346
+
 printer:
     enabled:    True
     name:       "MITSUBISHI_CP9550D"
