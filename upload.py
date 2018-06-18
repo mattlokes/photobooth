@@ -17,6 +17,7 @@ from pcloud import PyCloud
 import requests
 import tinyurl
 import qrcode
+import urllib2
 from multiprocessing import Process as Thread
 from multiprocessing import Queue
 
@@ -35,11 +36,35 @@ class Upload(State):
         self.gen_upload_menu()
         self.gen_upload_info()
 
-        Logger.info(__name__,"Connecting to pCloud...")
-        self.pcloud_login()
-        Logger.success(__name__,"pCloud Connection Success")
-        self.pcloud_upload_folder = self.pcloud_get_uploadfolderid(self.pcloud_path)
-        Logger.info(__name__,"pCloud Folder ID - {0}".format(self.pcloud_upload_folder))
+        if self.cfg.get("upload__enabled"):
+            # If Upload Enabled, Test for internet connection, if fails Disable uploading.
+            Logger.info(__name__, "Upload Enabled, Testing Internet Connection...")
+            if not self.test_internet():
+                Logger.warning(__name__,"Internet Connection Failed! disabling upload...")
+                cfg.set("upload__enabled",False)
+                return
+            else:
+                Logger.success(__name__,"Internet Connection Success!")
+
+            #Internet Connection is good, so attempt to connect to pCloud, if fails Disable uploading
+            Logger.info(__name__,"Connecting to pCloud...")
+            if self.pcloud_test_conn() :
+                Logger.success(__name__,"pCloud Connection Success")
+                self.pcloud_upload_folder = self.pcloud_get_uploadfolderid(self.pcloud_path)
+                Logger.info(__name__,"pCloud Folder ID - {0}".format(self.pcloud_upload_folder))
+            else:
+                Logger.error(__name__,"pCloud Connection Failed")
+                self.cfg.set("upload__enabled", False)
+            return
+
+    def test_internet( self ):
+        for _ in range(120):
+            try:
+                rsp = urllib2.urlopen('http://google.com',timeout=1)
+                return True
+            except urllib2.URLError:
+                pass
+        return False
         
     def pcloud_login( self ):
         f = open(self.cfg.get("upload__password_file"), 'r')
@@ -88,8 +113,13 @@ class Upload(State):
         return
 
     def pcloud_test_conn(self):
-        #TODO
-        return True
+        for _ in range( 3 ):
+            try:
+                self.pcloud_login()
+                return True
+            except:
+                Logger.warning(__name__,"pCloud Connection Error, retrying connection")
+        return False
 
     def register_photodb(self, photo_name, photo_link, photo_primary):
         primary = 1 if photo_primary else 0

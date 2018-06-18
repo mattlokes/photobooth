@@ -15,6 +15,7 @@ from PIL import ImageFont
 from PIL import ImageDraw
 
 from state import *
+from logger import *
 
 from pcloud import PyCloud
 import tinyurl
@@ -110,7 +111,7 @@ class Prin(State):
                 self.ani_q_cmd_push("PRINTWAIT")
             else:
                 self.status = self.print_q.get()
-                print "Print Complete with status .. {0}".format(self.status)
+                Logger.info(__name__, "Print Complete with status .. {0}".format(self.status))
                 self.ani_q_cmd_push("COMPLETE")
 
 

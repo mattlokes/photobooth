@@ -17,6 +17,7 @@ class PrinterModule:
 
     def __init__( self, cfg ):
         if cups_fail:
+            cfg.set("printer__enabled",False)
             return None
         self.cfg = cfg
         self.conn = cups.Connection()
@@ -24,11 +25,15 @@ class PrinterModule:
         self.printer_name = self.printers_list.keys()[0]
         Logger.info(__name__, "CUPS Printer - {0}".format(self.printer_name))
         cups.setUser(getpass.getuser())
-        lsusb_name = self.printer_connected()
-        if lsusb_name:
-            Logger.success(__name__, "USB Printer - {0}".format(lsusb_name))
-        else:
-            Logger.warning(__name__, "USB Printer - {0}".format(lsusb_name))
+        
+        if self.cfg.get("printer__enabled"):
+            Logger.info(__name__, "Printing Enabled, Testing Printer Connection...")
+            lsusb_name = self.printer_connected()
+            if lsusb_name:
+                Logger.success(__name__, "USB Printer - {0}".format(lsusb_name))
+            else:
+                Logger.warning(__name__,"Printer Enabled, but not connected, disabling...")
+                cfg.set("printer__enabled",False)
 
     def set_cups_user ( self, user ):
         cups.setUser(user)
@@ -40,6 +45,7 @@ class PrinterModule:
             return p
         else:
             #Print Command None
+            Logger.warning(__name__,"Printer Enabled, but not connected, disabling...")
             return None
 
     def get_attributes( self ):

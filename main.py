@@ -8,11 +8,11 @@ from glob import glob
 from sys import exit
 import sys
 from time import sleep, clock
-import urllib2
 
 from PIL import Image
 
 from camera import CameraException, Camera_gPhoto as CameraModule
+from printer import PrinterModule
 from gpio import Gpio as GPIO
 
 from config import *
@@ -25,14 +25,6 @@ from prin import *
 
 from logger import *
 
-def test_internet():
-    for _ in range(120):
-        try:
-            rsp = urllib2.urlopen('http://google.com',timeout=1)
-            return True
-        except urllib2.URLError:
-            pass
-    return False
 
 def sig_green_handler(signum, frame):
     stim = "GPIO" if frame == None else "Signal"
@@ -88,6 +80,7 @@ def reset_combo( el ):
 def main():
 
     ### Initialisation ###
+    Logger.info(__name__,"Initialising.... ")
     pygame.init()
     gameDisplay = pygame.display.set_mode((disp_w,disp_h),pygame.FULLSCREEN)
     pygame.mouse.set_visible(False)
@@ -102,25 +95,7 @@ def main():
     signal.signal(signal.SIGUSR2, sig_red_handler)
 
     camera = CameraModule(image_size)
-    
-    # If Printer Enabled, Test for CUPS and USB connect, If fails Disable printing
-    if cfg.get("printer__enabled"):
-        from printer import PrinterModule
-        printer  = PrinterModule(cfg)
-        if printer == None or printer.printer_connected() == None:
-            Logger.warning(__name__,"Printer Enabled, but not connected, disabling...")
-            cfg.set("printer__enabled",False)
-    
-    # If Upload Enabled, Test for internet connection, if fails Disable uploading.
-    if cfg.get("upload__enabled"):
-        sleep(5)
-        Logger.info(__name__, "Upload Enabled, Testing Internet Connection...")
-        if not test_internet():
-            Logger.warning(__name__,"Internet Connection Failed! disabling upload...")
-            cfg.set("upload__enabled",False)
-        else:
-            Logger.success(__name__,"Internet Connection Success!")
-
+    printer  = PrinterModule(cfg)
     
     intro_ani = IntroAnimation( cfg, gameDisplay, disp_w, disp_h, fps, gpio, pictures )
     capture   = Capture ( cfg, gameDisplay, disp_w, disp_h, 15, gpio, camera )
@@ -129,6 +104,7 @@ def main():
     prin  = Prin( cfg, gameDisplay, disp_w, disp_h,fps, gpio, printer )
 
 
+    Logger.success(__name__,"Initialisation Complete! ")
     state = "INTRO_S"
     retake = False
     while not state == "END":
