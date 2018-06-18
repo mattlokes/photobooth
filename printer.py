@@ -15,9 +15,10 @@ except:
 class PrinterModule:
     """A PrinterModule Class"""
 
-    def __init__( self ):
+    def __init__( self, cfg ):
         if cups_fail:
             return None
+        self.cfg = cfg
         self.conn = cups.Connection()
         self.printers_list = self.conn.getPrinters()
         self.printer_name = self.printers_list.keys()[0]
@@ -34,10 +35,9 @@ class PrinterModule:
 
     def print_image( self, path ):
         if self.printer_connected() != None :
-            #Print Command for 4x6 media
-            #return self.conn.printFile(self.printer_name, path, "print_photo_booth", {'media':'???'})
-            #Print Command for 6x8 media
-            return self.conn.printFile(self.printer_name, path, "print_photo_booth", {'media':'w432h612'})
+            p = self.conn.printFile(self.printer_name, path, 
+                                    "print_photo_booth", {'media': self.cfg.get("printer__media")})
+            return p
         else:
             #Print Command None
             return None

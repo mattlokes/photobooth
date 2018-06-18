@@ -1,0 +1,39 @@
+event_name: "craig_lucy_wedding_2018"
+photo_dir: "/media/pi/PHOTOBOOTH"
+
+camera:
+    image_size_x: 4704
+    image_size_y: 3136
+
+printer:
+    enabled:    True
+    name:       "MITSUBISHI_CP9550D"
+    media:      "w288h432"  #for 6x4 images
+    #media:      "w432h612" #for 6x9 images
+    copies:     1
+    wait_time:  25
+    link_embed: True
+    link_font:  "fonts/arial.ttf"
+    link_size:  60
+    link_pos_x: 100
+    link_pos_y: 3000
+
+upload:
+    enabled:       True
+    password_file: ".pcloud_pass"
+    pcloud_path:   "/Public Folder/photobooth"
+    pcloud_url:    "https://filedn.com/lON9Nk3nzUs4KheBfvjzRuF"
+    photodb_url:   "http://labs.justabitmatt.com/photodb"
+
+display:
+    font: "fonts/springtime_in_april.ttf"
+    print_icon: "img/print_white.png"
+    upload_icon: "img/upload_white.png"
+    capture_instrs:
+        - "Step 1: Capture 4 photos."
+        - "Step 2: Preview Photos"
+        - "Step 3: Upload to the Cloud."
+        - "Step 4: Print 2 copies. One for you, one for the Guestbook!"
+    upload_instrs:
+        - "Hold up your smartphone camera app to this QR code..."
+        - "No phone? Dont worry the link will be printed on the Photo!"

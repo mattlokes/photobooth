@@ -19,16 +19,15 @@ from extratransforms import *
 
 class Process(State):
 
-    def __init__(self, gd, w, h, fps, gpio, pic):
-        State.__init__(self, gd, w, h, fps, gpio)  
+    def __init__(self, cfg, gd, w, h, fps, gpio, pic):
+        State.__init__(self, cfg, gd, w, h, fps, gpio)  
         self.pictures = pic
 
         self.gen_processing_bar()
-        self.gen_processing_menu()
+        self.gen_processing_menu("Upload")
 
         #Image Quality Config
-        self.image_size = (4704, 3136)
-        #self.image_size = (2352, 1568)
+        self.image_size = ( self.cfg.get("camera__image_size_x"), self.cfg.get("camera__image_size_y"))
         self.preview_drawn = False
         
     def gen_processing_bar(self):
@@ -50,7 +49,7 @@ class Process(State):
         self.processing_bar_pos = (0,((self.disp_h-film_h)/2))
         self.processing_bar_txt_pos = (50, ((self.disp_h-film_h)/2) +20 )
 
-    def gen_processing_menu(self):
+    def gen_processing_menu(self ,next_str):
         #Film Strip Background
         surf = pygame.Surface( (400,self.disp_h+200), pygame.SRCALPHA)
         surf.fill((40,40,40))
@@ -70,9 +69,9 @@ class Process(State):
         surf = pygame.transform.rotozoom(surf, 10, 1)
         
         #Create Info Text
-        font = pygame.font.Font("springtime_in_april.ttf", 100)
+        font = pygame.font.Font(self.cfg.get("display__font"), 100)
         radius = 90
-        l0 = font.render("Upload", 1, (255,255,255))
+        l0 = font.render(next_str, 1, (255,255,255))
         l1 = font.render("Retake", 1, (255,255,255))
         surf.blit(l0, (150, 220))
         #Generate Gradient Button Image
@@ -206,6 +205,13 @@ class Process(State):
             img = pygame.transform.scale(img, shrink) 
             img_pos = ((self.disp_w-img.get_size()[0])/2+180,65)
 
+            if self.cfg.get("upload__enabled"):
+                pass
+            elif self.cfg.get("printer__enabled"): 
+                self.gen_processing_menu("Print") #Regen with Print
+            else:
+                self.gen_processing_menu("Finish") #Regen with finish
+            
             self.ani_q_img_push( self.processing_menu, self.processing_menu_pos, 0.1, False, True)
             self.ani_q_img_push( img, img_pos, 0.3, True, False)
             self.ani_q_cmd_push("COMPLETE")

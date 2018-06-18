@@ -16,10 +16,11 @@ class PictureList:
     of taken and previously existing pictures.
     """
 
-    def __init__(self, basename):
+    def __init__(self, cfg, basename):
         """Initialize filenames to the given basename and search for
         existing files. Set the counter accordingly.
         """
+        self.cfg = cfg
 
         # Set basename and suffix
         self.basename = basename
@@ -68,7 +69,7 @@ class PictureList:
 
     def get_list(self):
         if self.counter == 0:
-            return [ "default.jpg" ]
+            return [ "img/default.jpg" ]
         else:
             return glob(self.basename + self.count_pattern + self.suffix)
 

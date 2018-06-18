@@ -13,7 +13,8 @@ from extratransforms import *
 
 class IntroAnimation:
 
-    def __init__(self, gd, w, h, fps, gpio, pl):
+    def __init__(self, cfg, gd, w, h, fps, gpio, pl):
+        self.cfg = cfg
         self.gameDisplay = gd
         self.disp_w = w
         self.disp_h = h 
@@ -52,7 +53,7 @@ class IntroAnimation:
         surf = pygame.transform.rotozoom(surf, 10, 1)
         
         #Create Info Text
-        font = pygame.font.Font("springtime_in_april.ttf", 100)
+        font = pygame.font.Font(self.cfg.get("display__font"), 100)
         radius = 90
         l0 = font.render("Press", 1, (255,255,255))
         l1 = font.render("To Begin!", 1, (255,255,255))

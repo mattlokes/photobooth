@@ -15,6 +15,7 @@ from PIL import Image
 from camera import CameraException, Camera_gPhoto as CameraModule
 from gpio import Gpio as GPIO
 
+from config import *
 from picturelist import *
 from introanimation import *
 from capture import *
@@ -24,16 +25,13 @@ from prin import *
 
 from logger import *
 
-def wait_for_internet_connection():
-    Logger.info(__name__, "Testing Internet Connection...")
+def test_internet():
     for _ in range(120):
         try:
             rsp = urllib2.urlopen('http://google.com',timeout=1)
-            Logger.success(__name__,"Internet Connection Success!")
             return True
         except urllib2.URLError:
             pass
-    Logger.warning(__name__,"Internet Connection Failed!")
     return False
 
 def sig_green_handler(signum, frame):
@@ -88,9 +86,7 @@ def reset_combo( el ):
         return True
 
 def main():
-    global printer_en
-    global upload_en
-    
+
     ### Initialisation ###
     pygame.init()
     gameDisplay = pygame.display.set_mode((disp_w,disp_h),pygame.FULLSCREEN)
@@ -98,7 +94,7 @@ def main():
     pygame.display.set_caption('Photobooth')
     clock = pygame.time.Clock()
 
-    pictures = PictureList(picture_basename)
+    pictures = PictureList(cfg, picture_basename)
 
     #pkill -USR1 python
     signal.signal(signal.SIGUSR1, sig_green_handler)
@@ -107,20 +103,30 @@ def main():
 
     camera = CameraModule(image_size)
     
-    if printer_en:
+    # If Printer Enabled, Test for CUPS and USB connect, If fails Disable printing
+    if cfg.get("printer__enabled"):
         from printer import PrinterModule
-        printer  = PrinterModule()
-        if printer == None:
-            printer_en = False
+        printer  = PrinterModule(cfg)
+        if printer == None or printer.printer_connected() == None:
+            Logger.warning(__name__,"Printer Enabled, but not connected, disabling...")
+            cfg.set("printer__enabled",False)
+    
+    # If Upload Enabled, Test for internet connection, if fails Disable uploading.
+    if cfg.get("upload__enabled"):
+        sleep(5)
+        Logger.info(__name__, "Upload Enabled, Testing Internet Connection...")
+        if not test_internet():
+            Logger.warning(__name__,"Internet Connection Failed! disabling upload...")
+            cfg.set("upload__enabled",False)
         else:
-            printer_en = True
+            Logger.success(__name__,"Internet Connection Success!")
 
     
-    intro_ani = IntroAnimation( gameDisplay, disp_w, disp_h, fps, gpio, pictures )
-    capture   = Capture ( gameDisplay, disp_w, disp_h, 15, gpio, camera )
-    process  = Process( gameDisplay, disp_w, disp_h, fps, gpio, pictures )
-    upload = Upload( gameDisplay, disp_w, disp_h,fps, gpio)
-    prin  = Prin( gameDisplay, disp_w, disp_h,fps, gpio, printer )
+    intro_ani = IntroAnimation( cfg, gameDisplay, disp_w, disp_h, fps, gpio, pictures )
+    capture   = Capture ( cfg, gameDisplay, disp_w, disp_h, 15, gpio, camera )
+    process  = Process( cfg, gameDisplay, disp_w, disp_h, fps, gpio, pictures )
+    upload = Upload( cfg, gameDisplay, disp_w, disp_h,fps, gpio)
+    prin  = Prin( cfg, gameDisplay, disp_w, disp_h,fps, gpio, printer )
 
 
     state = "INTRO_S"
@@ -142,8 +148,8 @@ def main():
             retake = False
             final_photos = []
             final_link = ""
-            final_uploaded = upload_en
-            final_printed = printer_en
+            final_uploaded = False
+            final_printed = False
 
             intro_ani.start()
             pygame.display.update()
@@ -194,9 +200,9 @@ def main():
                         final_photos = process.get_result()
                         process.reset()
 
-                        if upload_en:
+                        if cfg.get("upload__enabled"):
                             state = "UPLOAD_S"
-                        elif printer_en:
+                        elif cfg.get("printer__enabled"):
                             state = "PRINT_S"
                         else:
                             state = "DONE"
@@ -213,7 +219,7 @@ def main():
             #Update Photo Upload/ Printer Enable Switch State
             # TODO
 
-            upload.start( final_photos, upload_en, printer_en )
+            upload.start( final_photos )
             pygame.display.update()
             state = "UPLOAD"
         
@@ -226,8 +232,9 @@ def main():
                     #TODO upload success
                     if green_press( event):
                         upload.reset()
-                        
-                        if printer_en:
+                        final_uploaded = True
+
+                        if cfg.get("printer__enabled"):
                             state = "PRINT_S"
                         else:
                             state = "DONE"
@@ -253,6 +260,7 @@ def main():
                 #TODO Get print success value
                 prin.reset()
                 state = "DONE"
+                final_printed = True
 
             prin.next()
             pygame.display.update()
@@ -272,6 +280,8 @@ def main():
 
 ### Configuration ###
 
+cfg = Config("config.yaml")
+
 # Screen size
 disp_w = 1824
 disp_h = 984
@@ -283,7 +293,9 @@ image_size = (2352, 1568)
 thumb_size = (1176, 784)
 
 # Image basename
-picture_basename = datetime.now().strftime("/media/pi/PHOTOBOOTH/craig_and_lucy_2018/%Y-%m-%d/pic")
+picture_basename = "{0}/{1}/{2}/pic".format( cfg.get("photo_dir"), 
+                                             cfg.get("event_name"),
+                                             datetime.now().strftime("%Y-%m-%d") )
 
 # GPIO channels
 gpio_green_button = 6
@@ -298,17 +310,7 @@ gpio = GPIO(handle_gpio,
             out_alias=['green_led','red_led'],
            )
 
-# Is Photo Available
-upload_en = True
-
-# Printer Option enable?
-printer_en = True
-
 # pygame fps
 fps = 45
 
-if upload_en:
-    sleep(5)
-    if not wait_for_internet_connection():
-        exit(0)
 main()

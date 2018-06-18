@@ -25,14 +25,14 @@ from multiprocessing import Queue
 
 class Prin(State):
 
-    def __init__(self, gd, w, h, fps, gpio, printer):
-        State.__init__(self, gd, w, h, fps, gpio)
+    def __init__(self, cfg, gd, w, h, fps, gpio, printer):
+        State.__init__(self, cfg, gd, w, h, fps, gpio)
         self.printer = printer
 
         self.gen_print_bar()
         
     def gen_print_bar(self):
-        img = pygame.image.load("print_white.png")
+        img = pygame.image.load(self.cfg.get("display__print_icon"))
         ratio = 0.35
         shrink = ( int(img.get_size()[0]*ratio), int(img.get_size()[1]*ratio))
         self.print_img = pygame.transform.scale(img, shrink) 
@@ -58,18 +58,23 @@ class Prin(State):
         self.print_bar_img_pos = (1200,((self.disp_h-film_h)/2)+55)
     
     def print_file(self, printer, f, l, ret_q ):
-        imgTxt = '/tmp/imglink.jpg'
-        img = Image.open(f)
-        w, h = img.size
-        size = 60
+        if self.cfg.get("printer__link_embed"):
+            tmp_img = '/tmp/imglink.jpg'
+            img = Image.open(f)
+            font = ImageFont.truetype(self.cfg.get("printer__link_font"), 
+                                      self.cfg.get("printer__link_size"))
+            dr = ImageDraw.Draw(img)
+            dr.text( ( self.cfg.get("printer__link_pos_x"), self.cfg.get("printer__link_pos_y")),l,
+                     (0,0,0),font=font)
+            img.save(tmp_img)
+            fi = tmp_img
+        else:
+            fi = f
 
-        f = ImageFont.truetype("arial.ttf", size)
-        dr = ImageDraw.Draw(img)
-        dr.text((100, h-95),l,(0,0,0),font=f)
-        img.save(imgTxt)
-
-        printer.print_image(imgTxt)
-        sleep(25)
+        for _ in range(self.cfg.get("printer__copies")):
+            printer.print_image(fi)
+        
+        sleep(self.cfg.get("printer__wait_time"))
         ret_q.put("Done")
         return
     

@@ -9,9 +9,8 @@ from extratransforms import *
 
 class State:
 
-    def __init__(self, gd, w, h, fps, gpio):
-
-        #Generate info
+    def __init__(self, cfg, gd, w, h, fps, gpio):
+        self.cfg = cfg
         self.gameDisplay = gd
         self.disp_w = w
         self.disp_h = h
@@ -45,7 +44,7 @@ class State:
                                 'fsa':forceSurfaceAlpha } )
     
     def ani_q_txt_push(self, txt, col, size, xy, secs, fadeIn=False, overlay=False):
-        font = pygame.font.Font("springtime_in_april.ttf", size)
+        font = pygame.font.Font(self.cfg.get("display__font"), size)
         alpha = 0 if fadeIn else 255
         num = int(math.ceil(secs*self.fps)) if fadeIn else 1
         for _ in range( num ):

@@ -131,7 +131,7 @@ class Camera_gPhoto:
 
     def take_picture(self, filename="/tmp/picture.jpg"):
         if fake_enabled:
-            filename = "dbg.jpg"
+            filename = "img/dbg.jpg"
         elif gphoto2cffi_enabled:
             self._save_picture(filename, self.cap.capture())
         elif piggyphoto_enabled:

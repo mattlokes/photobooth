@@ -1,5 +1,4 @@
 import pygame
-#import pygame.camera
 import random
 import operator
 import os
@@ -13,6 +12,7 @@ from state import *
 
 from picturelist import *
 from camera import CameraException, Camera_gPhoto as CameraModule
+from logger import *
 
 import math
 from PIL import Image
@@ -21,9 +21,9 @@ from extratransforms import *
 
 class Capture(State):
 
-    def __init__(self, gd, w, h, fps, gpio, cam):
+    def __init__(self, cfg, gd, w, h, fps, gpio, cam):
         self.cam = cam
-        State.__init__(self, gd, w, h, fps, gpio)
+        State.__init__(self, cfg, gd, w, h, fps, gpio)
 
         #Generate ani points
         self.cap_num = 4
@@ -76,11 +76,7 @@ class Capture(State):
     
     def gen_instr_bars(self):
         film_h = 200
-        instr_bars_txt = [ 
-               "Step 1: Capture 4 photos.",
-               "Step 2: Preview Photos",
-               "Step 3: Upload to the Cloud.",
-               "Step 4: Print 2 copies. One for you, one for the Guestbook!"]
+        instr_bars_txt = self.cfg.get("display__capture_instrs") 
         self.instr_bars_ang = [3,-3,3,-2]
         self.instr_bars_pos = [(-10,-50), (-10,film_h+40), (-10,2*film_h+40), (-10,3*film_h+120)]
         self.instr_bars = [] #Will be 4 objects.
@@ -101,7 +97,7 @@ class Capture(State):
         
         for txt in instr_bars_txt:
             bar = surf.copy()
-            font = pygame.font.Font("springtime_in_april.ttf", 75)
+            font = pygame.font.Font(self.cfg.get("display__font"), 75)
             t = font.render(txt, 1, (255,255,255))
             bar.blit( t,(50,50))
             self.instr_bars.append(bar)
@@ -133,9 +129,9 @@ class Capture(State):
             try:
                 snap = self.cam.take_picture("/tmp/photob_%02d.jpg" % self.cap_cnt)
             except:
-                print "ERROR CAMERA BUSY, TRY TAKING LENS CAP OFF!?"
+                Logger.error(__name__,'Camera Error, Try taking lens cap off? ')
                 self.stop()
-                print "Restarting...."
+                Logger.warning(__name__,'Restarting... ')
                 os.execv(sys.executable, ['python'] + sys.argv)
 
             self.cap_path[self.cap_cnt] = snap

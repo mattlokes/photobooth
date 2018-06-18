@@ -25,13 +25,11 @@ from logger import *
 
 class Upload(State):
 
-    def __init__(self, gd, w, h, fps, gpio):
-        State.__init__(self, gd, w, h, fps, gpio)
-        self.event_name = "craig_lucy_wedding_2018"
-        self.pcloud_pass_file = ".pcloud_pass"
-        self.pcloud_path = "/Public Folder/photobooth/"+ self.event_name
-        self.pcloud_public_link = "https://filedn.com/lON9Nk3nzUs4KheBfvjzRuF"
-        self.public_link = self.pcloud_path.replace("/Public Folder", self.pcloud_public_link)
+    def __init__(self, cfg, gd, w, h, fps, gpio):
+        State.__init__(self, cfg, gd, w, h, fps, gpio)
+        self.pcloud_path = self.cfg.get("upload__pcloud_path") + "/" + self.cfg.get("event_name")
+        self.public_link = self.pcloud_path.replace("/Public Folder", 
+                                                    self.cfg.get("upload__pcloud_url"))
 
         self.gen_upload_bar()
         self.gen_upload_menu()
@@ -44,7 +42,7 @@ class Upload(State):
         Logger.info(__name__,"pCloud Folder ID - {0}".format(self.pcloud_upload_folder))
         
     def pcloud_login( self ):
-        f = open(self.pcloud_pass_file, 'r')
+        f = open(self.cfg.get("upload__password_file"), 'r')
         usr = f.readline().rstrip()
         psswd = f.readline().rstrip()
         self.pCloud = PyCloud(usr,psswd)
@@ -74,11 +72,13 @@ class Upload(State):
                     name = str(resp['metadata'][0]['name'])
                     ll = self.public_link +'/' + name
                     primary = name.count(".") == 1
-                    sl = self.register_photodb( name, ll, primary) 
+                    sl = self.register_photodb( name, ll, primary)
+                    if sl == None:
+                        raise Exception("Failed to register with photodb")
                     slinks.append(sl)
                     break
                 except:
-                    Logger.warning(__name__,"pCloud Error, retrying connection")
+                    Logger.warning(__name__,"Upload Error, retrying connection")
                     self.pcloud_login()
                     retrycnt -= 1
             if retrycnt == 0: #Failed Retries
@@ -95,12 +95,18 @@ class Upload(State):
         primary = 1 if photo_primary else 0
         for _ in range(3):
             try:
-                r = requests.post("http://labs.justabitmatt.com/photodb/rest/{0}/{1}".format(self.event_name, primary), json={'photo_name': photo_name, 'photo_link': photo_link})
+                url = "{0}/rest/{1}/{2}".format(self.cfg.get("upload__photodb_url"),
+                                                self.cfg.get("event_name"), 
+                                                primary)
+                req = {'photo_name': photo_name, 'photo_link': photo_link}
+                r = requests.post(url, json=req)
                 
                 if r.status_code != 200:
                     raise Exception("photodb POST gave respose code {0}".format(r.status_code))
                 
-                link = "http://labs.justabitmatt.com/photodb/gallery/{0}/{1}".format( self.event_name, photo_name.split(".")[0] )
+                link = "{0}/gallery/{1}/{2}".format(self.cfg.get("upload__photodb_url"),
+                                                    self.cfg.get("event_name"), 
+                                                    photo_name.split(".")[0] )
                 return tinyurl.shorten(link,"")
             except:
                 Logger.warning(__name__,"photodb register error {0}, retrying..".format(r.status_code))
@@ -108,7 +114,7 @@ class Upload(State):
 
     
     def gen_upload_bar(self):
-        img = pygame.image.load("upload_white.png")
+        img = pygame.image.load(self.cfg.get("display__upload_icon"))
         ratio = 0.40
         shrink = ( int(img.get_size()[0]*ratio), int(img.get_size()[1]*ratio))
         self.upload_img = pygame.transform.scale(img, shrink) 
@@ -133,7 +139,7 @@ class Upload(State):
         self.upload_bar_txt_pos = (50, ((self.disp_h-film_h)/2) +20 )
         self.upload_bar_img_pos = (1200,(self.disp_h-film_h)/2)
     
-    def gen_upload_menu(self):
+    def gen_upload_menu(self, next_str="Print"):
         #Film Strip Background
         surf = pygame.Surface( (400,self.disp_h+200), pygame.SRCALPHA)
         surf.fill((40,40,40))
@@ -153,9 +159,9 @@ class Upload(State):
         surf = pygame.transform.rotozoom(surf, 10, 1)
         
         #Create Info Text
-        font = pygame.font.Font("springtime_in_april.ttf", 100)
+        font = pygame.font.Font(self.cfg.get("display__font"), 100)
         radius = 90
-        l0 = font.render("Print", 1, (255,255,255))
+        l0 = font.render(next_str, 1, (255,255,255))
         surf.blit(l0, (150, 220))
         #Generate Gradient Button Image
         for i in [float(x)/20 for x in range(10,21)]:
@@ -164,8 +170,6 @@ class Upload(State):
 
         self.upload_menu = surf
         self.upload_menu_pos = (-50,-100)
-        #self.upload_menu_bar_pos = (0,((self.disp_h-film_h)/2))
-        #self.upload_menu_bar_txt_pos = (50, ((self.disp_h-film_h)/2) +20 )
     
     def gen_upload_info(self):
         film_h = 200
@@ -185,11 +189,11 @@ class Upload(State):
  
         self.upload_info_pos = (0,self.disp_h-250)
         self.upload_info = []
-        info_bars_txt = ["Hold up your smartphone camera app to this QR code...",
-                         "No phone? Dont worry the link will be printed on the Photo!"]
+        info_bars_txt = self.cfg.get("display__upload_instrs")
+
         for txt in info_bars_txt:
             bar = surf.copy()
-            font = pygame.font.Font("springtime_in_april.ttf", 75)
+            font = pygame.font.Font(self.cfg.get("display__font"), 75)
             t = font.render(txt, 1, (255,255,255))
             bar.blit( t,(250,50))
             self.upload_info.append(bar)
@@ -209,7 +213,7 @@ class Upload(State):
 
 
 
-    def start(self, photo_set, upload_en, print_en):
+    def start(self, photo_set):
         self.gpio.set('green_led', 0)
         self.gpio.set('red_led', 0)
         self.gameDisplay.fill((200,200,200))
@@ -240,8 +244,15 @@ class Upload(State):
                 self.ani_q_txt_push( "Uploading....", (255,255,255), 200,self.upload_bar_txt_pos , 0.1, False)
                 self.ani_q_cmd_push("UPLOADWAIT")
             else:
-                self.upload_link = self.pcloud_upload_q.get()
-                Logger.info(__name__,"pCloud Upload Complete - {0}".format(self.upload_link))
+                result = self.pcloud_upload_q.get()
+                if result == None:
+                    self.upload_link = "{0}/gallery/{1}".format(self.cfg.get("upload__photodb_url"),
+                                                                self.event_name )
+                    Logger.info(__name__,"pCloud Upload Failed, saving link as album")
+                else:
+                    self.upload_link = result
+                    Logger.info(__name__,"pCloud Upload Complete - {0}".format(self.upload_link))
+
                 self.ani_q_cmd_push("UPLOADQR")
 
         elif item['cmd'] == 'UPLOADQR':
@@ -251,6 +262,12 @@ class Upload(State):
             self.gameDisplay.fill((200,200,200))
             qr_img = pygame.image.load(qr_path)
             qr_pos = (((self.disp_w - qr_img.get_size()[0])/2)+200, ((self.disp_h - qr_img.get_size()[1])/2)-175 )
+            
+            if self.cfg.get("printer__enabled"):
+                pass
+            else:
+                self.gen_upload_menu("Finish")
+            
             link_pos = (((self.disp_w)/2)-100, ((self.disp_h)/2))
             self.ani_q_img_push( qr_img, qr_pos , 0.1, False)
             self.ani_q_txt_push( self.upload_link, (40,40,40), 75, link_pos, 0.1, False)
@@ -264,10 +281,6 @@ class Upload(State):
                 self.ani_q_pause_push(5)
             
             self.ani_q_cmd_push("UPLOADINFO")
-
-
-
-
 
     def reset(self):
         State.reset(self)
