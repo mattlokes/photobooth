@@ -196,14 +196,14 @@ class Process(State):
                 # Shrink Image and save to directory as well
                 img = Image.open(self.photo_set[i])
                 img.thumbnail( self.image_size, Image.ANTIALIAS )
-                img.save(self.photo_set[i])
+                img.save(self.photo_set[i], quality=75)
 
                 newname = output_filename.replace(".","."+str(i)+".")
                 shutil.move( self.photo_set[i], newname )
                 photos.append(newname)
 
             # Save assembled image
-            output_image.save(output_filename, "JPEG")
+            output_image.save(output_filename, "JPEG",quality=95 )
             self.final_photos= [output_filename] + photos
 
             self.ani_q_cmd_push("PROCESSPREVIEW")

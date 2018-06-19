@@ -70,7 +70,7 @@ class Prin(State):
             dr.text( ( self.cfg.get("printer__link_pos_x"), self.cfg.get("printer__link_pos_y")),l,
                      (0,0,0),font=font)
             
-        img.save(tmp_img)
+        img.save(tmp_img, "JPEG", quality=80 )
         fi = tmp_img
 
         for _ in range(self.cfg.get("printer__copies")):
