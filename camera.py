@@ -129,6 +129,9 @@ class Camera_gPhoto:
     def end_fast_preview( self ):
         self.cap.exit()
 
+    def set_idle( self ):
+        self.cap.setIdle()
+
     def take_picture(self, filename="/tmp/picture.jpg"):
         if fake_enabled:
             filename = "img/dbg.jpg"

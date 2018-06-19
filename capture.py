@@ -49,11 +49,11 @@ class Capture(State):
         self.cap_complete = False
    
     def schedule_capture(self):
-        self.ani_q_txt_push("5", (255,255,255), 200, self.prev_cnt_c, 1, True)
-        self.ani_q_txt_push("4", (255,255,255), 200, self.prev_cnt_c, 1, True)
-        self.ani_q_txt_push("3", (255,255,255), 200, self.prev_cnt_c, 1, True)
-        self.ani_q_txt_push("2", (255,255,255), 200, self.prev_cnt_c, 1, True)
-        self.ani_q_txt_push("1", (255,255,255), 200, self.prev_cnt_c, 0.5, True)
+        self.ani_q_txt_push("5", (255,255,255), 200, self.prev_cnt_c, 0.8, True)
+        self.ani_q_txt_push("4", (255,255,255), 200, self.prev_cnt_c, 0.8, True)
+        self.ani_q_txt_push("3", (255,255,255), 200, self.prev_cnt_c, 0.8, True)
+        self.ani_q_txt_push("2", (255,255,255), 200, self.prev_cnt_c, 0.8, True)
+        self.ani_q_txt_push("1", (255,255,255), 200, self.prev_cnt_c, 0, False)
         self.ani_q_cmd_push("CAPTURE")
 
     def gen_info(self):
@@ -126,6 +126,7 @@ class Capture(State):
             self.next()
        
         elif item['cmd'] == 'CAPTURE':
+            self.cam.set_idle() #Seems to be no auto focus without this!!
             try:
                 snap = self.cam.take_picture("/tmp/photob_%02d.jpg" % self.cap_cnt)
             except:
@@ -149,6 +150,7 @@ class Capture(State):
             if self.cap_cnt < 4:
                 self.schedule_capture()
             else:
+                self.preview_enabled = False
                 self.ani_q_pause_push(0.5)
                 self.ani_q_cmd_push("COMPLETE")
 
@@ -185,4 +187,5 @@ class Capture(State):
     def stop(self):
         self.gpio.set('green_led', 0)
         self.gpio.set('red_led', 0)
+        self.cam.set_idle()
         self.cam.end_fast_preview()
