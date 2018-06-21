@@ -191,7 +191,7 @@ class Process(State):
                 o = offset[i] 
                 img = cv.imread(self.photo_set[i])
                 lar_thumb = cv.resize(img, self.image_size, interpolation=cv.INTER_AREA )
-                cv.imwrite( self.photo_set[i], lar_thumb, [int(cv.IMWRITE_JPEG_QUALITY), 90]   )
+                cv.imwrite( self.photo_set[i], lar_thumb, [int(cv.IMWRITE_JPEG_QUALITY), 82]   )
                 
                 sma_thumb = cv.resize(lar_thumb, thumb_size, interpolation=cv.INTER_AREA )
                 out_img[o[1]:o[1]+sma_thumb.shape[0], o[0]:o[0]+sma_thumb.shape[1]] = sma_thumb

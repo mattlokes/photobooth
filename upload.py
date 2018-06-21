@@ -31,6 +31,7 @@ class Upload(State):
         self.pcloud_path = self.cfg.get("upload__pcloud_path") + "/" + self.cfg.get("event_name")
         self.public_link = self.pcloud_path.replace("/Public Folder", 
                                                     self.cfg.get("upload__pcloud_url"))
+        self.timeout = self.cfg.get("upload__timeout")
 
         self.gen_upload_bar()
         self.gen_upload_menu()
@@ -70,7 +71,7 @@ class Upload(State):
         f = open(self.cfg.get("upload__password_file"), 'r')
         usr = f.readline().rstrip()
         psswd = f.readline().rstrip()
-        self.pCloud = PyCloud(usr,psswd)
+        self.pCloud = PyCloud(usr,psswd, self.timeout)
 
     def pcloud_get_uploadfolderid( self, pPath):
         folder_split = filter(None,pPath.split("/"))
@@ -98,20 +99,22 @@ class Upload(State):
                 break
             except:
                 Logger.warning(__name__,"Upload Error, retrying connection")
-                self.pcloud_login()
+                if not self.pcloud_test_conn():
+                    break
         if failed:
             ret_q.put(None)
             return
         else:
             names = [ str(i['name']) for i in resp['metadata'] if "thumb" not in i['name'] ]
             failed = len(names)
-            for name in names:
+            for name in names[::-1]: #Reverse List
                 ll = self.public_link +'/' + name
                 primary = name.count(".") == 1
                 sl = self.register_photodb( name, ll, primary)
                 if sl != None:
                     failed -= 1
-                    slinks.append(sl)
+                    if primary:
+                        slinks.append(sl)
             if failed == 0:
                 ret_q.put(slinks[0])
             else:
@@ -131,11 +134,12 @@ class Upload(State):
         primary = 1 if photo_primary else 0
         for _ in range(3):
             try:
+                r = None
                 url = "{0}/rest/{1}/{2}".format(self.cfg.get("upload__photodb_url"),
                                                 self.cfg.get("event_name"), 
                                                 primary)
                 req = {'photo_name': photo_name, 'photo_link': photo_link}
-                r = requests.post(url, json=req)
+                r = requests.post(url, json=req, timeout=self.timeout)
                 
                 if r.status_code != 200:
                     raise Exception("photodb POST gave respose code {0}".format(r.status_code))
@@ -145,7 +149,10 @@ class Upload(State):
                                                     photo_name.split(".")[0] )
                 return tinyurl.shorten(link,"")
             except:
-                Logger.warning(__name__,"photodb register error {0}, retrying..".format(r.status_code))
+                if r == None:
+                    Logger.warning(__name__,"photodb register timeout, retrying...")
+                else:
+                    Logger.warning(__name__,"photodb register error {0}, retrying..".format(r.status_code))
         return None
 
     
@@ -236,6 +243,7 @@ class Upload(State):
             
 
     def gen_qr(self, link):
+        qr_path = self.cfg.get("tmp_dir") + '/tmpqr.png'
         qr = qrcode.QRCode( version=1,
                             error_correction=qrcode.constants.ERROR_CORRECT_L,
                             box_size=10,
@@ -244,8 +252,8 @@ class Upload(State):
         qr.make(fit=True)
 
         img = qr.make_image(fill_color="black", back_color="transparent")
-        img.save('/tmp/tmpqr.png')
-        return '/tmp/tmpqr.png'
+        img.save(qr_path)
+        return qr_path
 
 
 
@@ -255,6 +263,7 @@ class Upload(State):
         self.gameDisplay.fill((200,200,200))
         
         self.photo_set = photo_set
+        self.short_link = True
         
         self.ani_q_img_push( self.upload_bar, self.upload_bar_pos , 0.1, False, False)
         self.ani_q_txt_push( "Uploading....", (255,255,255), 200,self.upload_bar_txt_pos , 0.1, False)
@@ -284,7 +293,12 @@ class Upload(State):
                 if result == None:
                     album_link = "{0}/gallery/{1}".format(self.cfg.get("upload__photodb_url"),
                                                           self.cfg.get("event_name") )
-                    self.upload_link =  tinyurl.shorten(album_link,"")
+                    try:
+                        self.upload_link = tinyurl.shorten(album_link,"")
+                    except:
+                        self.upload_link = album_link
+                        print album_link
+                        self.short_link = False
                     Logger.info(__name__,"pCloud Upload Failed, saving link as album")
                 else:
                     self.upload_link = result
@@ -307,7 +321,8 @@ class Upload(State):
             
             link_pos = (((self.disp_w)/2)-100, ((self.disp_h)/2))
             self.ani_q_img_push( qr_img, qr_pos , 0.1, False)
-            self.ani_q_txt_push( self.upload_link, (40,40,40), 75, link_pos, 0.1, False)
+            if self.short_link:
+                self.ani_q_txt_push( self.upload_link, (40,40,40), 75, link_pos, 0.1, False)
             self.ani_q_img_push( self.upload_menu, self.upload_menu_pos, 0.1, False)
             self.ani_q_cmd_push("COMPLETE")
             self.ani_q_cmd_push("UPLOADINFO")
@@ -324,3 +339,4 @@ class Upload(State):
         self.photo_set = {}
         self.pcloud_upload = None
         self.upload_link = None
+        self.short_link = True

@@ -59,7 +59,7 @@ class Prin(State):
         self.print_bar_img_pos = (1200,((self.disp_h-film_h)/2)+55)
     
     def print_file(self, printer, f, l, ret_q ):
-        tmp_img = '/tmp/print_img.jpg'
+        tmp_img = self.cfg.get("tmp_dir") + '/print_img.jpg'
         img = Image.open(f)
         img.thumbnail(( 2076,1384), Image.ANTIALIAS) #shrink to printer resolution
 

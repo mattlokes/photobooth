@@ -112,6 +112,7 @@ class Capture(State):
                                      tilt=self.instr_bars_ang[idx],
                                      forceSurfaceAlpha=False )
                 self.ani_q_pause_push(2)
+            self.ani_q_pause_push(1)
             self.ani_q_cmd_push("CAPTURE_START")
         
         elif item['cmd'] == 'CAPTURE_START':
@@ -119,7 +120,8 @@ class Capture(State):
             self.preview_enabled = True
             self.ani_q_img_push( self.info_bar, (0, self.disp_h - self.info_bar.get_size()[1]), 0, False, True)
         
-            self.ani_q_pause_push(3)
+            prev_txt_c = tuple(map(operator.add, self.prev_c, (-300,-100)))
+            self.ani_q_txt_push("Get Ready!", (255,255,255), 180, prev_txt_c, 1.5 , True)
         
             self.prev_cnt_c = tuple(map(operator.add, self.prev_c, (-50,-100)))
             self.schedule_capture()
@@ -128,7 +130,7 @@ class Capture(State):
         elif item['cmd'] == 'CAPTURE':
             self.cam.set_idle() #Seems to be no auto focus without this!!
             try:
-                snap = self.cam.take_picture("/tmp/photob_%02d.jpg" % self.cap_cnt)
+                snap = self.cam.take_picture(self.cfg.get("tmp_dir") + "/photob_%02d.jpg" % self.cap_cnt)
             except:
                 Logger.error(__name__,'Camera Error, Try taking lens cap off? ')
                 self.stop()

@@ -1,5 +1,6 @@
-event_name: "craig_lucy_wedding_2018"
+event_name: "debug_wedding_2018"
 photo_dir: "/media/pi/PHOTOBOOTH"
+tmp_dir: "/mnt/ramdisk"
 
 camera:
     image_size_x: 4704
@@ -29,6 +30,7 @@ upload:
     pcloud_path:   "/Public Folder/photobooth"
     pcloud_url:    "https://filedn.com/lON9Nk3nzUs4KheBfvjzRuF"
     photodb_url:   "http://labs.justabitmatt.com/photodb"
+    timeout:       6
 
 display:
     font: "fonts/springtime_in_april.ttf"
