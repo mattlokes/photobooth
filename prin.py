@@ -98,7 +98,7 @@ class Prin(State):
            self.print_q = Queue()
            self.print_t = Thread(target=self.print_file,\
                                        args=( self.printer,\
-                                              self.photo_set[0],\
+                                              self.photo_set['primary'],\
                                               self.link,\
                                               self.print_q ))
            self.print_t.start()
@@ -118,7 +118,7 @@ class Prin(State):
 
     def reset(self):
         State.reset(self)
-        self.photo_set = []
+        self.photo_set = {}
         self.print_t = None
         self.link = ""
         self.status = ""

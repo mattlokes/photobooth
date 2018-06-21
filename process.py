@@ -12,7 +12,9 @@ from state import *
 from picturelist import *
 
 import math
-from PIL import Image
+#from PIL import Image
+import cv2 as cv
+import numpy as np
 
 from extratransforms import *
 
@@ -99,9 +101,9 @@ class Process(State):
                 
                 #Create Image With Template
                 if self.cfg.get("image__background"):
-                    output_image = Image.open(self.cfg.get("image__background"))
+                    out_img = cv.imread(self.cfg.get("image__background"))
                 else:
-                    output_image = Image.new('RGB', self.image_size, (255, 255, 255))
+                    out_img = np.ones([self.image_size[1],self.image_size[0],3], dtype=np.uint8)*255
             
                 dpi = float(self.image_size[0])/6
                 dpm = int(dpi/25.4)
@@ -163,8 +165,6 @@ class Process(State):
                        |---|-------------|---|-------------|---|
                          a        w       2*b       w        a
                 """
-                # Create output image with white background
-                output_image = Image.new('RGB', self.image_size, (255, 255, 255))
             
                 # Thumbnail size of pictures
                 outer_border = 100
@@ -188,23 +188,29 @@ class Process(State):
                                  thumb_box[1] + inner_border ) )
 
             for i in range(4):
-                # Resize Image and Paste with offset
-                img = Image.open(self.photo_set[i])
-                img.thumbnail(thumb_size,Image.ANTIALIAS)
-                output_image.paste(img, offset[i])
+                o = offset[i] 
+                img = cv.imread(self.photo_set[i])
+                lar_thumb = cv.resize(img, self.image_size, interpolation=cv.INTER_AREA )
+                cv.imwrite( self.photo_set[i], lar_thumb, [int(cv.IMWRITE_JPEG_QUALITY), 90]   )
                 
-                # Shrink Image and save to directory as well
-                img = Image.open(self.photo_set[i])
-                img.thumbnail( self.image_size, Image.ANTIALIAS )
-                img.save(self.photo_set[i], quality=75)
+                sma_thumb = cv.resize(lar_thumb, thumb_size, interpolation=cv.INTER_AREA )
+                out_img[o[1]:o[1]+sma_thumb.shape[0], o[0]:o[0]+sma_thumb.shape[1]] = sma_thumb
 
                 newname = output_filename.replace(".","."+str(i)+".")
                 shutil.move( self.photo_set[i], newname )
                 photos.append(newname)
 
             # Save assembled image
-            output_image.save(output_filename, "JPEG",quality=95 )
-            self.final_photos= [output_filename] + photos
+            cv.imwrite( output_filename, out_img, [int(cv.IMWRITE_JPEG_QUALITY), 90] )
+            
+            thumb_filename = output_filename.replace("/pic","/thumb.pic")
+            thumb = cv.resize(out_img, ( int(self.image_size[0]/6), int(self.image_size[1]/6)),
+                              interpolation=cv.INTER_AREA )
+            cv.imwrite( thumb_filename, thumb, [int(cv.IMWRITE_JPEG_QUALITY), 90] )
+            
+            self.final_photos= {'primary': output_filename, 
+                                'primary_thumb': thumb_filename, 
+                                'secondary' : photos }
 
             self.ani_q_cmd_push("PROCESSPREVIEW")
 
@@ -213,7 +219,7 @@ class Process(State):
             self.gpio.set('red_led', 1)
             
             self.gameDisplay.fill((200,200,200))
-            img = pygame.image.load(self.final_photos[0])
+            img = pygame.image.load(self.final_photos['primary'])
             ratio = 0.275
             #ratio = 0.55
             shrink = ( int(img.get_size()[0]*ratio), int(img.get_size()[1]*ratio))
@@ -252,7 +258,7 @@ class Process(State):
         self.photo_set = [None,None,None,None]
         self.photo_set_thumbs = [None,None,None,None]
         self.process_complete = False
-        self.final_photos = []
+        self.final_photos = {}
 
     def get_result(self):
         return self.final_photos

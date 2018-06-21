@@ -88,29 +88,35 @@ class Upload(State):
         return folder_walk[-1]
 
     def pcloud_uploadfiles(self, pc, fid, f, ret_q ):
+        failed = True
         slinks = []
-        for i in f:
-            retrycnt = 3
-            while( retrycnt > 0):
-                try:
-                    resp = pc.uploadfile(files=[i],folderid=fid)
-                    name = str(resp['metadata'][0]['name'])
-                    ll = self.public_link +'/' + name
-                    primary = name.count(".") == 1
-                    sl = self.register_photodb( name, ll, primary)
-                    if sl == None:
-                        raise Exception("Failed to register with photodb")
+        files = [ f['primary'] ] + [f['primary_thumb'] ] + f['secondary']
+        for _ in range (3):
+            try:
+                resp = pc.uploadfile(files=files,folderid=fid)
+                failed = False
+                break
+            except:
+                Logger.warning(__name__,"Upload Error, retrying connection")
+                self.pcloud_login()
+        if failed:
+            ret_q.put(None)
+            return
+        else:
+            names = [ str(i['name']) for i in resp['metadata'] if "thumb" not in i['name'] ]
+            failed = len(names)
+            for name in names:
+                ll = self.public_link +'/' + name
+                primary = name.count(".") == 1
+                sl = self.register_photodb( name, ll, primary)
+                if sl != None:
+                    failed -= 1
                     slinks.append(sl)
-                    break
-                except:
-                    Logger.warning(__name__,"Upload Error, retrying connection")
-                    self.pcloud_login()
-                    retrycnt -= 1
-            if retrycnt == 0: #Failed Retries
+            if failed == 0:
+                ret_q.put(slinks[0])
+            else:
                 ret_q.put(None)
-                return
-        ret_q.put(slinks[0])
-        return
+            return
 
     def pcloud_test_conn(self):
         for _ in range( 3 ):
@@ -276,8 +282,9 @@ class Upload(State):
             else:
                 result = self.pcloud_upload_q.get()
                 if result == None:
-                    self.upload_link = "{0}/gallery/{1}".format(self.cfg.get("upload__photodb_url"),
-                                                                self.event_name )
+                    album_link = "{0}/gallery/{1}".format(self.cfg.get("upload__photodb_url"),
+                                                          self.cfg.get("event_name") )
+                    self.upload_link =  tinyurl.shorten(album_link,"")
                     Logger.info(__name__,"pCloud Upload Failed, saving link as album")
                 else:
                     self.upload_link = result
@@ -314,6 +321,6 @@ class Upload(State):
 
     def reset(self):
         State.reset(self)
-        self.photo_set = []
+        self.photo_set = {}
         self.pcloud_upload = None
         self.upload_link = None

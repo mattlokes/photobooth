@@ -122,7 +122,7 @@ def main():
         ### INTRO ANIMATION STATES ###
         if state == "INTRO_S":
             retake = False
-            final_photos = []
+            final_photos = {}
             final_link = ""
             final_uploaded = False
             final_printed = False
@@ -242,7 +242,7 @@ def main():
             pygame.display.update()
 
         if state == "DONE":
-            pictures.log_add( final_photos[0], final_link, final_uploaded, final_printed )
+            pictures.log_add( final_photos['primary'], final_link, final_uploaded, final_printed )
             state = "INTRO_S"
        
         if "CAPTURE" in state:
