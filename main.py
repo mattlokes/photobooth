@@ -106,7 +106,7 @@ def main():
 
     #Clean entire tmp_directory
     for f in os.listdir( cfg.get("tmp_dir") ):
-        f_pth = os.path.join(cfg.get("tmp_dir", f))
+        f_pth = os.path.join(cfg.get("tmp_dir"), f)
         try:
             if os.path.isfile(f_pth):
                 os.unlink(f_pth)
