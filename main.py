@@ -188,6 +188,7 @@ def main():
                         if cfg.get("upload__enabled"):
                             state = "UPLOAD_S"
                         elif cfg.get("printer__enabled"):
+                            final_link = cfg.get("event_url")
                             state = "PRINT_S"
                         else:
                             state = "DONE"

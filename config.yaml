@@ -1,4 +1,5 @@
 event_name: "debug_wedding_2018"
+event_url:  "https://tinyurl.com/y84fbrzx"
 photo_dir: "/media/pi/PHOTOBOOTH"
 tmp_dir: "/mnt/ramdisk"
 
@@ -8,7 +9,7 @@ camera:
 
 image:
     format:     "fancy"
-    background: False
+    background: "img/craig_and_lucy2.jpg"
     dpi:        346
 
 printer:
@@ -19,10 +20,10 @@ printer:
     copies:     1
     wait_time:  25
     link_embed: True
-    link_font:  "fonts/arial.ttf"
-    link_size:  60
-    link_pos_x: 100
-    link_pos_y: 3000
+    link_font:  "fonts/gillsans_light.ttf"
+    link_size:  40
+    link_pos_x: 1150
+    link_pos_y: 1275
 
 upload:
     enabled:       True
