@@ -263,7 +263,6 @@ class Upload(State):
         self.gameDisplay.fill((200,200,200))
         
         self.photo_set = photo_set
-        self.short_link = True
         
         self.ani_q_img_push( self.upload_bar, self.upload_bar_pos , 0.1, False, False)
         self.ani_q_txt_push( "Uploading....", (255,255,255), 200,self.upload_bar_txt_pos , 0.1, False)
@@ -291,14 +290,7 @@ class Upload(State):
             else:
                 result = self.pcloud_upload_q.get()
                 if result == None:
-                    album_link = "{0}/gallery/{1}".format(self.cfg.get("upload__photodb_url"),
-                                                          self.cfg.get("event_name") )
-                    try:
-                        self.upload_link = tinyurl.shorten(album_link,"")
-                    except:
-                        self.upload_link = album_link
-                        print album_link
-                        self.short_link = False
+                    self.upload_link = self.cfg.get("event_url")
                     Logger.info(__name__,"pCloud Upload Failed, saving link as album")
                 else:
                     self.upload_link = result
@@ -321,8 +313,7 @@ class Upload(State):
             
             link_pos = (((self.disp_w)/2)-100, ((self.disp_h)/2))
             self.ani_q_img_push( qr_img, qr_pos , 0.1, False)
-            if self.short_link:
-                self.ani_q_txt_push( self.upload_link, (40,40,40), 75, link_pos, 0.1, False)
+            self.ani_q_txt_push( self.upload_link, (40,40,40), 75, link_pos, 0.1, False)
             self.ani_q_img_push( self.upload_menu, self.upload_menu_pos, 0.1, False)
             self.ani_q_cmd_push("COMPLETE")
             self.ani_q_cmd_push("UPLOADINFO")
@@ -339,4 +330,3 @@ class Upload(State):
         self.photo_set = {}
         self.pcloud_upload = None
         self.upload_link = None
-        self.short_link = True
