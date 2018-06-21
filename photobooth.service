@@ -1,0 +1,16 @@
+[Unit]
+Description=photobooth
+After=network.target
+
+[Service]
+User=pi
+Restart=on-failure
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=photobooth
+Environment=DISPLAY=:0
+WorkingDirectory=/home/pi/dev/photobooth
+ExecStart=/usr/bin/python main.py
+
+[Install]
+WantedBy=multi-user.target
